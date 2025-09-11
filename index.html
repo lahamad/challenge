@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -54,25 +56,27 @@
         .advertisement-slider {
             -webkit-overflow-scrolling: touch;
             scroll-snap-type: x mandatory;
-            scrollbar-width: none; /* Firefox */
+            scrollbar-width: none;
         }
 
         .advertisement-slider::-webkit-scrollbar {
-            display: none; /* Chrome, Safari, Opera */
+            display: none;
         }
 
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
+        /* Custom scrollbar for product grid on non-webkit browsers */
+        #product-grid {
+            scrollbar-width: thin;
+            scrollbar-color: #d1d5db #f3f4f6;
         }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .canvas-container {
+            width: 100%;
+            height: 250px;
+            position: relative;
+        }
+        .canvas-container canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
         }
     </style>
 </head>
@@ -89,20 +93,18 @@
                 </button>
                 <h1 class="text-4xl font-bold text-gray-800">SWAG</h1>
             </div>
-            <!-- Middle: Search bar -->
-            <div class="flex-grow flex justify-center mx-4">
-                <div class="relative w-full max-w-xl">
-                    <input type="text" id="search-input" placeholder="Search products..." class="gradient-search-bar w-full py-3 px-6 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-300">
+            <!-- Right side: Search, Cart and Profile buttons -->
+            <div class="flex items-center space-x-6">
+                <div class="relative">
+                    <input type="text" id="search-input" placeholder="Search products..." class="gradient-search-bar w-64 py-3 px-6 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-300">
                     <i class="fas fa-search absolute right-5 top-1/2 -translate-y-1/2 text-gray-500"></i>
                 </div>
-            </div>
-            <!-- Right side: Profile and Cart buttons -->
-            <div class="flex items-center space-x-4">
+                <button id="cart-button" class="text-gray-800 focus:outline-none relative">
+                    <i class="fas fa-shopping-cart text-2xl"></i>
+                    <span id="cart-count" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center opacity-0 transition-opacity">0</span>
+                </button>
                 <button id="profile-button" class="text-gray-800 focus:outline-none">
                     <i class="fas fa-user text-2xl"></i>
-                </button>
-                <button id="cart-button" class="text-gray-800 focus:outline-none">
-                    <i class="fas fa-shopping-cart text-2xl"></i>
                 </button>
             </div>
         </header>
@@ -112,7 +114,7 @@
             <!-- Navigation Bars -->
             <nav class="flex justify-around items-center bg-black text-white p-4 rounded-xl shadow-lg">
                 <button onclick="loadContent('home')" class="text-white font-medium py-2 px-4 rounded-full hover:bg-gray-800 transition-colors duration-300">Home</button>
-                <button onclick="loadContent('sells')" class="text-white font-medium py-2 px-4 rounded-full hover:bg-gray-800 transition-colors duration-300">Sells</button>
+                <button onclick="loadContent('sales')" class="text-white font-medium py-2 px-4 rounded-full hover:bg-gray-800 transition-colors duration-300">Sales</button>
                 <button onclick="loadContent('contact')" class="text-white font-medium py-2 px-4 rounded-full hover:bg-gray-800 transition-colors duration-300">Contact</button>
                 <button onclick="loadContent('service')" class="text-white font-medium py-2 px-4 rounded-full hover:bg-gray-800 transition-colors duration-300">Service</button>
             </nav>
@@ -136,8 +138,7 @@
                     </div>
                     <!-- Slide 3 -->
                     <div class="advertisement-slide bg-green-400 flex items-center justify-center p-8 text-white">
-                        <div class="text-center">
-                            <h2 class="text-4xl font-bold mb-2">Free Shipping!</h2>
+                        <div class="text-4xl font-bold mb-2">Free Shipping!</h2>
                             <p class="text-lg">On all orders over ₹1,500.</p>
                         </div>
                     </div>
@@ -162,194 +163,265 @@
                             <div class="col-span-full">
                                 <h3 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Men's Fashion</h3>
                             </div>
-                            <div class="shop-item-card bg-gray-50" data-category="men" data-name="Classic Black Tee" data-price="999" data-image="https://images.unsplash.com/photo-1583743814966-8936f4525270?q=80&w=2940">
-                                <img src="https://images.unsplash.com/photo-1583743814966-8936f4525270?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Classic+Tee';" alt="Classic Black Tee" class="product-image">
+                            <div class="shop-item-card bg-gray-50 relative" data-category="men" data-name="Classic Black Tee" data-price="799" data-original-price="999" data-image="https://images.unsplash.com/photo-1583743814966-8936f4525270?q=80&w=2940" data-onsale="true" data-model="tshirt">
+                                <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">SALE</span>
+                                <div class="product-visual-container">
+                                    <img src="https://images.unsplash.com/photo-1583743814966-8936f4525270?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Classic+Tee';" alt="Classic Black Tee" class="product-image">
+                                </div>
                                 <div class="p-4">
                                     <h4 class="font-bold text-gray-800">Classic Black Tee</h4>
-                                    <p class="text-gray-600 text-sm">₹999</p>
-                                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <p class="text-gray-600 text-sm"><span class="line-through text-red-500">₹999</span> <span class="text-gray-600">₹799</span></p>
+                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
                                 </div>
                             </div>
-                            <div class="shop-item-card bg-gray-50" data-category="men" data-name="Slim-Fit Jeans" data-price="2499" data-image="https://images.unsplash.com/photo-1624378439366-22a84399e578?q=80&w=2940">
-                                <img src="https://images.unsplash.com/photo-1624378439366-22a84399e578?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Slim-Fit+Jeans';" alt="Slim-Fit Denim Jeans" class="product-image">
+                            <div class="shop-item-card bg-gray-50 relative" data-category="men" data-name="Slim-Fit Jeans" data-price="2499" data-image="https://images.unsplash.com/photo-1624378439366-22a84399e578?q=80&w=2940" data-model="jeans">
+                                <div class="product-visual-container">
+                                    <img src="https://images.unsplash.com/photo-1624378439366-22a84399e578?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Slim-Fit+Jeans';" alt="Slim-Fit Denim Jeans" class="product-image">
+                                </div>
                                 <div class="p-4">
                                     <h4 class="font-bold text-gray-800">Slim-Fit Jeans</h4>
                                     <p class="text-gray-600 text-sm">₹2,499</p>
-                                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
                                 </div>
                             </div>
-                            <div class="shop-item-card bg-gray-50" data-category="men" data-name="Stylish Leather Jacket" data-price="5999" data-image="https://images.unsplash.com/photo-1621334814930-b3b0d2b17f57?q=80&w=2940">
-                                <img src="https://images.unsplash.com/photo-1621334814930-b3b0d2b17f57?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Leather+Jacket';" alt="Stylish Leather Jacket" class="product-image">
+                            <div class="shop-item-card bg-gray-50 relative" data-category="men" data-name="Stylish Leather Jacket" data-price="5999" data-image="https://images.unsplash.com/photo-1621334814930-b3b0d2b17f57?q=80&w=2940" data-model="jacket">
+                                <div class="product-visual-container">
+                                    <img src="https://images.unsplash.com/photo-1621334814930-b3b0d2b17f57?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Leather+Jacket';" alt="Stylish Leather Jacket" class="product-image">
+                                </div>
                                 <div class="p-4">
                                     <h4 class="font-bold text-gray-800">Leather Jacket</h4>
                                     <p class="text-gray-600 text-sm">₹5,999</p>
-                                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
                                 </div>
                             </div>
-                            <div class="shop-item-card bg-gray-50" data-category="men" data-name="Casual Khaki Trousers" data-price="1799" data-image="https://images.unsplash.com/photo-1624378439366-22a84399e578?q=80&w=2940">
-                                <img src="https://images.unsplash.com/photo-1624378439366-22a84399e578?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Khaki+Trousers';" alt="Casual Khaki Trousers" class="product-image">
+                            <div class="shop-item-card bg-gray-50 relative" data-category="men" data-name="Casual Khaki Trousers" data-price="1799" data-image="https://images.unsplash.com/photo-1624378439366-22a84399e578?q=80&w=2940" data-model="pants">
+                                <div class="product-visual-container">
+                                    <img src="https://images.unsplash.com/photo-1624378439366-22a84399e578?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Khaki+Trousers';" alt="Casual Khaki Trousers" class="product-image">
+                                </div>
                                 <div class="p-4">
                                     <h4 class="font-bold text-gray-800">Casual Trousers</h4>
                                     <p class="text-gray-600 text-sm">₹1,799</p>
-                                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
                                 </div>
                             </div>
-                            <div class="shop-item-card bg-gray-50" data-category="men" data-name="Grey Hooded Sweatshirt" data-price="1599" data-image="https://images.unsplash.com/photo-1620799140408-edc6d1d46b17?q=80&w=2940">
-                                <img src="https://images.unsplash.com/photo-1620799140408-edc6d1d46b17?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Hoodie';" alt="Grey Hooded Sweatshirt" class="product-image">
+                            <div class="shop-item-card bg-gray-50 relative" data-category="men" data-name="Grey Hooded Sweatshirt" data-price="1599" data-image="https://images.unsplash.com/photo-1620799140408-edc6d1d46b17?q=80&w=2940" data-model="tshirt">
+                                <div class="product-visual-container">
+                                    <img src="https://images.unsplash.com/photo-1620799140408-edc6d1d46b17?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Hoodie';" alt="Grey Hooded Sweatshirt" class="product-image">
+                                </div>
                                 <div class="p-4">
                                     <h4 class="font-bold text-gray-800">Sporty Sweatshirt</h4>
                                     <p class="text-gray-600 text-sm">₹1,599</p>
-                                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
                                 </div>
                             </div>
-                            <div class="shop-item-card bg-gray-50" data-category="men" data-name="White Linen Shirt" data-price="1899" data-image="https://images.unsplash.com/photo-1620799140408-edc6d1d46b17?q=80&w=2940">
-                                <img src="https://images.unsplash.com/photo-1620799140408-edc6d1d46b17?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Linen+Shirt';" alt="White Linen Shirt" class="product-image">
+                            <div class="shop-item-card bg-gray-50 relative" data-category="men" data-name="White Linen Shirt" data-price="1899" data-image="https://images.unsplash.com/photo-1620799140408-edc6d1d46b17?q=80&w=2940" data-model="tshirt">
+                                <div class="product-visual-container">
+                                    <img src="https://images.unsplash.com/photo-1620799140408-edc6d1d46b17?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Linen+Shirt';" alt="White Linen Shirt" class="product-image">
+                                </div>
                                 <div class="p-4">
                                     <h4 class="font-bold text-gray-800">Linen Formal Shirt</h4>
                                     <p class="text-gray-600 text-sm">₹1,899</p>
-                                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
                                 </div>
                             </div>
                             <!-- Women's Section -->
                             <div class="col-span-full mt-8">
                                 <h3 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Women's Fashion</h3>
                             </div>
-                            <div class="shop-item-card bg-gray-50" data-category="women" data-name="Floral Summer Dress" data-price="3299" data-image="https://images.unsplash.com/photo-1549480103-6052026e6327?q=80&w=2940">
-                                <img src="https://images.unsplash.com/photo-1549480103-6052026e6327?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Floral+Dress';" alt="Floral Summer Dress" class="product-image">
+                            <div class="shop-item-card bg-gray-50 relative" data-category="women" data-name="Floral Summer Dress" data-price="2999" data-original-price="3299" data-image="https://images.unsplash.com/photo-1549480103-6052026e6327?q=80&w=2940" data-onsale="true" data-model="dress">
+                                <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">SALE</span>
+                                <div class="product-visual-container">
+                                    <img src="https://images.unsplash.com/photo-1549480103-6052026e6327?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Floral+Dress';" alt="Floral Summer Dress" class="product-image">
+                                </div>
                                 <div class="p-4">
                                     <h4 class="font-bold text-gray-800">Summer Floral Dress</h4>
-                                    <p class="text-gray-600 text-sm">₹3,299</p>
-                                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <p class="text-gray-600 text-sm"><span class="line-through text-red-500">₹3,299</span> <span class="text-gray-600">₹2,999</span></p>
+                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
                                 </div>
                             </div>
-                            <div class="shop-item-card bg-gray-50" data-category="women" data-name="Elegant Silk Blouse" data-price="1499" data-image="https://images.unsplash.com/photo-1582035306898-1e0e852a3d7b?q=80&w=2940">
-                                <img src="https://images.unsplash.com/photo-1582035306898-1e0e852a3d7b?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Silk+Blouse';" alt="Elegant Silk Blouse" class="product-image">
+                            <div class="shop-item-card bg-gray-50 relative" data-category="women" data-name="Elegant Silk Blouse" data-price="1499" data-image="https://images.unsplash.com/photo-1582035306898-1e0e852a3d7b?q=80&w=2940" data-model="tshirt">
+                                <div class="product-visual-container">
+                                    <img src="https://images.unsplash.com/photo-1582035306898-1e0e852a3d7b?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Silk+Blouse';" alt="Elegant Silk Blouse" class="product-image">
+                                </div>
                                 <div class="p-4">
                                     <h4 class="font-bold text-gray-800">Elegant Silk Top</h4>
                                     <p class="text-gray-600 text-sm">₹1,499</p>
-                                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
                                 </div>
                             </div>
-                            <div class="shop-item-card bg-gray-50" data-category="women" data-name="High-Waisted Trousers" data-price="2199" data-image="https://images.unsplash.com/photo-1566150916327-b95d820577a7?q=80&w=2940">
-                                <img src="https://images.unsplash.com/photo-1566150916327-b95d820577a7?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=High-Waisted+Trousers';" alt="High-Waisted Trousers" class="product-image">
+                            <div class="shop-item-card bg-gray-50 relative" data-category="women" data-name="High-Waisted Trousers" data-price="2199" data-image="https://images.unsplash.com/photo-1566150916327-b95d820577a7?q=80&w=2940" data-model="pants">
+                                <div class="product-visual-container">
+                                    <img src="https://images.unsplash.com/photo-1566150916327-b95d820577a7?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=High-Waisted+Trousers';" alt="High-Waisted Trousers" class="product-image">
+                                </div>
                                 <div class="p-4">
                                     <h4 class="font-bold text-gray-800">High-Waisted Trousers</h4>
                                     <p class="text-gray-600 text-sm">₹2,199</p>
-                                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
                                 </div>
                             </div>
-                            <div class="shop-item-card bg-gray-50" data-category="women" data-name="Navy Pleated Midi Skirt" data-price="1899" data-image="https://images.unsplash.com/photo-1594967396000-0e9e900994f7?q=80&w=2940">
-                                <img src="https://images.unsplash.com/photo-1594967396000-0e9e900994f7?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Pleated+Skirt';" alt="Navy Pleated Midi Skirt" class="product-image">
+                            <div class="shop-item-card bg-gray-50 relative" data-category="women" data-name="Navy Pleated Midi Skirt" data-price="1899" data-image="https://images.unsplash.com/photo-1594967396000-0e9e900994f7?q=80&w=2940" data-model="skirt">
+                                <div class="product-visual-container">
+                                    <img src="https://images.unsplash.com/photo-1594967396000-0e9e900994f7?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Pleated+Skirt';" alt="Navy Pleated Midi Skirt" class="product-image">
+                                </div>
                                 <div class="p-4">
                                     <h4 class="font-bold text-gray-800">Pleated Midi Skirt</h4>
                                     <p class="text-gray-600 text-sm">₹1,899</p>
-                                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
                                 </div>
                             </div>
-                            <div class="shop-item-card bg-gray-50" data-category="women" data-name="Bohemian Floral Blouse" data-price="1299" data-image="https://images.unsplash.com/photo-1582035306898-1e0e852a3d7b?q=80&w=2940">
-                                <img src="https://images.unsplash.com/photo-1582035306898-1e0e852a3d7b?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Floral+Blouse';" alt="Bohemian Floral Blouse" class="product-image">
+                            <div class="shop-item-card bg-gray-50 relative" data-category="women" data-name="Bohemian Floral Blouse" data-price="1100" data-original-price="1299" data-image="https://images.unsplash.com/photo-1582035306898-1e0e852a3d7b?q=80&w=2940" data-onsale="true" data-model="tshirt">
+                                <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">SALE</span>
+                                <div class="product-visual-container">
+                                    <img src="https://images.unsplash.com/photo-1582035306898-1e0e852a3d7b?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Floral+Blouse';" alt="Bohemian Floral Blouse" class="product-image">
+                                </div>
                                 <div class="p-4">
                                     <h4 class="font-bold text-gray-800">Boho Floral Blouse</h4>
-                                    <p class="text-gray-600 text-sm">₹1,299</p>
-                                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <p class="text-gray-600 text-sm"><span class="line-through text-red-500">₹1,299</span> <span class="text-gray-600">₹1,100</span></p>
+                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
                                 </div>
                             </div>
-                            <div class="shop-item-card bg-gray-50" data-category="women" data-name="Khaki Utility Jumpsuit" data-price="2899" data-image="https://images.unsplash.com/photo-1566150916327-b95d820577a7?q=80&w=2940">
-                                <img src="https://images.unsplash.com/photo-1566150916327-b95d820577a7?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Jumpsuit';" alt="Khaki Utility Jumpsuit" class="product-image">
+                            <div class="shop-item-card bg-gray-50 relative" data-category="women" data-name="Khaki Utility Jumpsuit" data-price="2899" data-image="https://images.unsplash.com/photo-1566150916327-b95d820577a7?q=80&w=2940" data-model="jumpsuit">
+                                <div class="product-visual-container">
+                                    <img src="https://images.unsplash.com/photo-1566150916327-b95d820577a7?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Jumpsuit';" alt="Khaki Utility Jumpsuit" class="product-image">
+                                </div>
                                 <div class="p-4">
                                     <h4 class="font-bold text-gray-800">Utility Jumpsuit</h4>
                                     <p class="text-gray-600 text-sm">₹2,899</p>
-                                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
                                 </div>
                             </div>
                             <!-- Men's Accessories Section -->
                             <div class="col-span-full mt-8">
                                 <h3 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Men's Accessories</h3>
                             </div>
-                            <div class="shop-item-card bg-gray-50" data-category="men_accessories" data-name="Classic Watch" data-price="4999" data-image="https://images.unsplash.com/photo-1610438258327-f1e1f8222c83?q=80&w=2940">
-                                <img src="https://images.unsplash.com/photo-1610438258327-f1e1f8222c83?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Classic+Watch';" alt="Classic Watch" class="product-image">
+                            <div class="shop-item-card bg-gray-50 relative" data-category="men_accessories" data-name="Classic Watch" data-price="4999" data-image="https://images.unsplash.com/photo-1610438258327-f1e1f8222c83?q=80&w=2940" data-model="watch">
+                                <div class="product-visual-container">
+                                    <img src="https://images.unsplash.com/photo-1610438258327-f1e1f8222c83?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Classic+Watch';" alt="Classic Watch" class="product-image">
+                                </div>
                                 <div class="p-4">
                                     <h4 class="font-bold text-gray-800">Classic Watch</h4>
                                     <p class="text-gray-600 text-sm">₹4,999</p>
-                                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
                                 </div>
                             </div>
-                            <div class="shop-item-card bg-gray-50" data-category="men_accessories" data-name="Leather Wallet" data-price="1299" data-image="https://images.unsplash.com/photo-1561053153-a745c1109319?q=80&w=2940">
-                                <img src="https://images.unsplash.com/photo-1561053153-a745c1109319?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Leather+Wallet';" alt="Leather Wallet" class="product-image">
+                            <div class="shop-item-card bg-gray-50 relative" data-category="men_accessories" data-name="Leather Wallet" data-price="1299" data-image="https://images.unsplash.com/photo-1561053153-a745c1109319?q=80&w=2940" data-model="wallet">
+                                <div class="product-visual-container">
+                                    <img src="https://images.unsplash.com/photo-1561053153-a745c1109319?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Leather+Wallet';" alt="Leather Wallet" class="product-image">
+                                </div>
                                 <div class="p-4">
                                     <h4 class="font-bold text-gray-800">Leather Wallet</h4>
                                     <p class="text-gray-600 text-sm">₹1,299</p>
-                                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
                                 </div>
                             </div>
                             <!-- New Men's Accessories -->
-                            <div class="shop-item-card bg-gray-50" data-category="men_accessories" data-name="Stylish Sunglasses" data-price="1599" data-image="https://images.unsplash.com/photo-1572635196237-14b3f281503f?q=80&w=2960">
-                                <img src="https://images.unsplash.com/photo-1572635196237-14b3f281503f?q=80&w=2960" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Sunglasses';" alt="Stylish Sunglasses" class="product-image">
+                            <div class="shop-item-card bg-gray-50 relative" data-category="men_accessories" data-name="Stylish Sunglasses" data-price="1399" data-original-price="1599" data-image="https://images.unsplash.com/photo-1572635196237-14b3f281503f?q=80&w=2960" data-onsale="true" data-model="sunglasses">
+                                <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">SALE</span>
+                                <div class="product-visual-container">
+                                    <img src="https://images.unsplash.com/photo-1572635196237-14b3f281503f?q=80&w=2960" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Sunglasses';" alt="Stylish Sunglasses" class="product-image">
+                                </div>
                                 <div class="p-4">
                                     <h4 class="font-bold text-gray-800">Stylish Sunglasses</h4>
-                                    <p class="text-gray-600 text-sm">₹1,599</p>
-                                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <p class="text-gray-600 text-sm"><span class="line-through text-red-500">₹1,599</span> <span class="text-gray-600">₹1,399</span></p>
+                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
                                 </div>
                             </div>
-                            <div class="shop-item-card bg-gray-50" data-category="men_accessories" data-name="Travel Backpack" data-price="2999" data-image="https://images.unsplash.com/photo-1549480103-6052026e6327?q=80&w=2940">
-                                <img src="https://images.unsplash.com/photo-1549480103-6052026e6327?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Backpack';" alt="Travel Backpack" class="product-image">
+                            <div class="shop-item-card bg-gray-50 relative" data-category="men_accessories" data-name="Travel Backpack" data-price="2999" data-image="https://images.unsplash.com/photo-1549480103-6052026e6327?q=80&w=2940" data-model="backpack">
+                                <div class="product-visual-container">
+                                    <img src="https://images.unsplash.com/photo-1549480103-6052026e6327?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Backpack';" alt="Travel Backpack" class="product-image">
+                                </div>
                                 <div class="p-4">
                                     <h4 class="font-bold text-gray-800">Travel Backpack</h4>
                                     <p class="text-gray-600 text-sm">₹2,999</p>
-                                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
                                 </div>
                             </div>
-                            <div class="shop-item-card bg-gray-50" data-category="men_accessories" data-name="Leather Belt" data-price="899" data-image="https://images.unsplash.com/photo-1561053153-a745c1109319?q=80&w=2940">
-                                <img src="https://images.unsplash.com/photo-1561053153-a745c1109319?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Leather+Belt';" alt="Leather Belt" class="product-image">
+                            <div class="shop-item-card bg-gray-50 relative" data-category="men_accessories" data-name="Leather Belt" data-price="899" data-image="https://images.unsplash.com/photo-1561053153-a745c1109319?q=80&w=2940" data-model="belt">
+                                <div class="product-visual-container">
+                                    <img src="https://images.unsplash.com/photo-1561053153-a745c1109319?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Leather+Belt';" alt="Leather Belt" class="product-image">
+                                </div>
                                 <div class="p-4">
                                     <h4 class="font-bold text-gray-800">Leather Belt</h4>
                                     <p class="text-gray-600 text-sm">₹899</p>
-                                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
                                 </div>
                             </div>
                             <!-- Women's Accessories Section -->
                             <div class="col-span-full mt-8">
                                 <h3 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Women's Accessories</h3>
                             </div>
-                            <div class="shop-item-card bg-gray-50" data-category="women_accessories" data-name="Silk Scarf" data-price="899" data-image="https://images.unsplash.com/photo-1610438258327-f1e1f8222c83?q=80&w=2940">
-                                <img src="https://images.unsplash.com/photo-1610438258327-f1e1f8222c83?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Silk+Scarf';" alt="Silk Scarf" class="product-image">
+                            <div class="shop-item-card bg-gray-50 relative" data-category="women_accessories" data-name="Silk Scarf" data-price="899" data-image="https://images.unsplash.com/photo-1610438258327-f1e1f8222c83?q=80&w=2940" data-model="scarf">
+                                <div class="product-visual-container">
+                                    <img src="https://images.unsplash.com/photo-1610438258327-f1e1f8222c83?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Silk+Scarf';" alt="Silk Scarf" class="product-image">
+                                </div>
                                 <div class="p-4">
                                     <h4 class="font-bold text-gray-800">Silk Scarf</h4>
                                     <p class="text-gray-600 text-sm">₹899</p>
-                                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
                                 </div>
                             </div>
-                            <div class="shop-item-card bg-gray-50" data-category="women_accessories" data-name="Statement Necklace" data-price="1599" data-image="https://images.unsplash.com/photo-1594967396000-0e9e900994f7?q=80&w=2940">
-                                <img src="https://images.unsplash.com/photo-1594967396000-0e9e900994f7?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Necklace';" alt="Statement Necklace" class="product-image">
+                            <div class="shop-item-card bg-gray-50 relative" data-category="women_accessories" data-name="Statement Necklace" data-price="1599" data-image="https://images.unsplash.com/photo-1594967396000-0e9e900994f7?q=80&w=2940" data-model="necklace">
+                                <div class="product-visual-container">
+                                    <img src="https://images.unsplash.com/photo-1594967396000-0e9e900994f7?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Necklace';" alt="Statement Necklace" class="product-image">
+                                </div>
                                 <div class="p-4">
                                     <h4 class="font-bold text-gray-800">Statement Necklace</h4>
                                     <p class="text-gray-600 text-sm">₹1,599</p>
-                                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
                                 </div>
                             </div>
                             <!-- New Women's Accessories -->
-                            <div class="shop-item-card bg-gray-50" data-category="women_accessories" data-name="Leather Handbag" data-price="3499" data-image="https://images.unsplash.com/photo-1566150916327-b95d820577a7?q=80&w=2940">
-                                <img src="https://images.unsplash.com/photo-1566150916327-b95d820577a7?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Handbag';" alt="Leather Handbag" class="product-image">
+                            <div class="shop-item-card bg-gray-50 relative" data-category="women_accessories" data-name="Leather Handbag" data-price="2999" data-original-price="3499" data-image="https://images.unsplash.com/photo-1566150916327-b95d820577a7?q=80&w=2940" data-onsale="true" data-model="handbag">
+                                <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">SALE</span>
+                                <div class="product-visual-container">
+                                    <img src="https://images.unsplash.com/photo-1566150916327-b95d820577a7?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Handbag';" alt="Leather Handbag" class="product-image">
+                                </div>
                                 <div class="p-4">
                                     <h4 class="font-bold text-gray-800">Leather Handbag</h4>
-                                    <p class="text-gray-600 text-sm">₹3,499</p>
-                                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <p class="text-gray-600 text-sm"><span class="line-through text-red-500">₹3,499</span> <span class="text-gray-600">₹2,999</span></p>
+                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
                                 </div>
                             </div>
-                            <div class="shop-item-card bg-gray-50" data-category="women_accessories" data-name="Elegant Hoop Earrings" data-price="799" data-image="https://images.unsplash.com/photo-1594967396000-0e9e900994f7?q=80&w=2940">
-                                <img src="https://images.unsplash.com/photo-1594967396000-0e9e900994f7?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Earrings';" alt="Elegant Hoop Earrings" class="product-image">
+                            <div class="shop-item-card bg-gray-50 relative" data-category="women_accessories" data-name="Elegant Hoop Earrings" data-price="799" data-image="https://images.unsplash.com/photo-1594967396000-0e9e900994f7?q=80&w=2940" data-model="earrings">
+                                <div class="product-visual-container">
+                                    <img src="https://images.unsplash.com/photo-1594967396000-0e9e900994f7?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Earrings';" alt="Elegant Hoop Earrings" class="product-image">
+                                </div>
                                 <div class="p-4">
                                     <h4 class="font-bold text-gray-800">Hoop Earrings</h4>
                                     <p class="text-gray-600 text-sm">₹799</p>
-                                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
                                 </div>
                             </div>
-                            <div class="shop-item-card bg-gray-50" data-category="women_accessories" data-name="Wide Brim Hat" data-price="1199" data-image="https://images.unsplash.com/photo-1582035306898-1e0e852a3d7b?q=80&w=2940">
-                                <img src="https://images.unsplash.com/photo-1582035306898-1e0e852a3d7b?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Wide+Brim+Hat';" alt="Wide Brim Hat" class="product-image">
+                            <div class="shop-item-card bg-gray-50 relative" data-category="women_accessories" data-name="Wide Brim Hat" data-price="1199" data-image="https://images.unsplash.com/photo-1582035306898-1e0e852a3d7b?q=80&w=2940" data-model="hat">
+                                <div class="product-visual-container">
+                                    <img src="https://images.unsplash.com/photo-1582035306898-1e0e852a3d7b?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Wide+Brim+Hat';" alt="Wide Brim Hat" class="product-image">
+                                </div>
                                 <div class="p-4">
                                     <h4 class="font-bold text-gray-800">Wide Brim Hat</h4>
                                     <p class="text-gray-600 text-sm">₹1,199</p>
-                                    <button onclick="addToCart(this)" class="mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
+                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
                                 </div>
                             </div>
                         </div>
@@ -380,7 +452,6 @@
         <div class="flex flex-col items-center space-y-4">
             <h2 class="text-3xl font-bold mb-4">Menu</h2>
             <button onclick="loadContent('home')" class="text-lg font-medium hover:text-gray-400 transition-colors duration-200">Home</button>
-            <button onclick="loadContent('sells')" class="text-lg font-medium hover:text-gray-400 transition-colors duration-200">Sells</button>
             <button onclick="loadContent('contact')" class="text-lg font-medium hover:text-gray-400 transition-colors duration-200">Contact</button>
             <button onclick="loadContent('service')" class="text-lg font-medium hover:text-gray-400 transition-colors duration-200">Service</button>
         </div>
@@ -394,6 +465,101 @@
         </div>
     </div>
 
+    <!-- Cart Overlay (Hidden by default) -->
+    <div id="cart-overlay" class="fixed inset-0 z-50 transform translate-x-full transition-transform duration-300 bg-gray-900 bg-opacity-50">
+        <div class="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-xl flex flex-col rounded-l-xl">
+            <div class="flex justify-between items-center p-6 border-b border-gray-200">
+                <h2 class="text-2xl font-bold">My Cart</h2>
+                <button id="cart-close-button" class="text-gray-500 hover:text-gray-800 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="cart-items" class="flex-grow p-6 overflow-y-auto space-y-4">
+                <p class="text-gray-500 text-center">Your cart is empty.</p>
+            </div>
+            <div class="p-6 border-t border-gray-200">
+                <div class="flex justify-between items-center text-lg font-bold">
+                    <span>Total:</span>
+                    <span>₹<span id="cart-total">0</span></span>
+                </div>
+                <button id="checkout-button" class="mt-4 w-full bg-gray-800 text-white font-bold py-3 rounded-full shadow-lg hover:bg-gray-700 transition-colors">
+                    Checkout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal (Hidden by default) -->
+    <div id="payment-modal" class="fixed inset-0 z-50 hidden bg-gray-900 bg-opacity-75 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-xl shadow-lg max-w-lg w-full">
+            <h2 class="text-2xl font-bold mb-6 text-center">Payment Details</h2>
+            <div class="mb-4">
+                <div id="payment-items" class="bg-gray-100 p-4 rounded-lg max-h-60 overflow-y-auto mb-4"></div>
+                <div class="flex justify-between items-center text-lg font-bold">
+                    <span>Total:</span>
+                    <span>₹<span id="payment-total">0</span></span>
+                </div>
+            </div>
+            <form id="payment-form" class="space-y-4">
+                <div class="space-y-2">
+                    <label class="block text-gray-700 font-semibold">Select Payment Method</label>
+                    <div class="flex flex-col space-y-2">
+                        <label class="inline-flex items-center">
+                            <input type="radio" class="form-radio text-gray-800" name="payment-method" value="cod" checked>
+                            <span class="ml-2 text-gray-800">Cash on Delivery</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" class="form-radio text-gray-800" name="payment-method" value="upi">
+                            <span class="ml-2 text-gray-800">UPI Payment</span>
+                        </label>
+                    </div>
+                </div>
+                <div id="upi-details" class="bg-gray-100 p-4 rounded-lg hidden">
+                    <p class="text-sm text-gray-600 mb-2">Please transfer ₹<span id="upi-amount">0</span> to the following UPI ID:</p>
+                    <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-300">
+                        <span id="upi-id" class="font-mono text-gray-800">swag-fashion@upi</span>
+                        <button type="button" id="copy-upi" class="text-gray-500 hover:text-gray-800 ml-4 transition-colors">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex justify-between space-x-4 mt-6">
+                    <button type="button" id="payment-cancel" class="flex-1 py-3 px-6 text-center bg-gray-200 text-gray-800 rounded-full hover:bg-gray-300 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" id="pay-now-button" class="flex-1 py-3 px-6 text-center bg-gray-800 text-white font-bold rounded-full shadow-lg hover:bg-gray-700 transition-colors">
+                        Pay Now
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Receipt Modal (Hidden by default) -->
+    <div id="receipt-modal" class="fixed inset-0 z-50 hidden bg-gray-900 bg-opacity-75 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-xl shadow-lg max-w-lg w-full text-center">
+            <div class="flex flex-col items-center mb-6">
+                <div class="bg-green-500 rounded-full h-16 w-16 flex items-center justify-center text-white text-3xl mb-4">
+                    <i class="fas fa-check"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">Order Placed!</h2>
+                <p class="text-gray-600">Your order has been successfully placed and will be delivered soon.</p>
+            </div>
+            <div class="border-t border-b border-gray-200 py-6 mb-6 text-left">
+                <p class="text-gray-500">Order ID: <span id="receipt-order-id" class="font-bold text-gray-800"></span></p>
+                <p class="text-gray-500">Payment Method: <span id="receipt-payment-method" class="font-bold text-gray-800"></span></p>
+                <div id="receipt-items" class="mt-4 space-y-2"></div>
+                <div class="flex justify-between items-center mt-4 pt-2 border-t border-gray-200">
+                    <span class="font-bold text-lg">Total:</span>
+                    <span class="font-bold text-lg">₹<span id="receipt-total">0</span></span>
+                </div>
+            </div>
+            <button id="receipt-close-button" class="w-full bg-gray-800 text-white font-bold py-3 rounded-full shadow-lg hover:bg-gray-700 transition-colors">
+                Continue Shopping
+            </button>
+        </div>
+    </div>
+
     <!-- Simple Message Box -->
     <div id="message-box" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-[100]">
         <div class="bg-white p-8 rounded-lg shadow-lg max-w-sm w-full text-center">
@@ -403,319 +569,544 @@
         </div>
     </div>
 
-    <!-- Payment Processing Modal -->
-    <div id="processing-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-[100]">
-        <div class="bg-white p-8 rounded-lg shadow-lg max-w-sm w-full text-center flex flex-col items-center">
-            <div class="loader mb-4"></div>
-            <p class="text-gray-700">Processing your payment...</p>
-        </div>
-    </div>
+<script>
+    let cart = {}; // Use an object to store product quantities
+    const cartCountSpan = document.getElementById('cart-count');
+    const cartItemsContainer = document.getElementById('cart-items');
+    const cartTotalSpan = document.getElementById('cart-total');
+    const cartOverlay = document.getElementById('cart-overlay');
+    const messageBox = document.getElementById('message-box');
+    const messageContent = document.getElementById('message-content');
+    const messageCloseButton = document.getElementById('message-close');
+    const checkoutButton = document.getElementById('checkout-button');
 
-    <!-- Payment Receipt Modal -->
-    <div id="receipt-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-[100]">
-        <div class="bg-white p-8 rounded-lg shadow-lg max-w-sm w-full text-center">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">Payment Receipt</h3>
-            <div id="receipt-content" class="space-y-2 mb-6 text-gray-700">
-                <!-- Receipt details will be injected here -->
-            </div>
-            <button id="receipt-close" class="bg-gray-800 text-white py-2 px-6 rounded-full hover:bg-gray-700">Close</button>
-        </div>
-    </div>
+    const paymentModal = document.getElementById('payment-modal');
+    const paymentItemsContainer = document.getElementById('payment-items');
+    const paymentTotalSpan = document.getElementById('payment-total');
+    const paymentCancelButton = document.getElementById('payment-cancel');
+    const payNowButton = document.getElementById('pay-now-button');
+    const upiDetailsDiv = document.getElementById('upi-details');
+    const upiAmountSpan = document.getElementById('upi-amount');
+    const upiIdSpan = document.getElementById('upi-id');
+    const copyUpiButton = document.getElementById('copy-upi');
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const shopButton = document.getElementById('shop-button');
-            const productGrid = document.getElementById('product-grid');
-            const menuButton = document.getElementById('menu-button');
-            const mainMenuOverlay = document.getElementById('main-menu-overlay');
-            const menuCloseButton = document.getElementById('menu-close-button');
-            const cartButton = document.getElementById('cart-button');
-            const messageBox = document.getElementById('message-box');
-            const messageContent = document.getElementById('message-content');
-            const messageCloseButton = document.getElementById('message-close');
-            const searchInput = document.getElementById('search-input');
-            const mainContentArea = document.getElementById('main-content-area');
-            const processingModal = document.getElementById('processing-modal');
-            const receiptModal = document.getElementById('receipt-modal');
-            const receiptContent = document.getElementById('receipt-content');
-            const receiptCloseButton = document.getElementById('receipt-close');
+    const receiptModal = document.getElementById('receipt-modal');
+    const receiptOrderIdSpan = document.getElementById('receipt-order-id');
+    const receiptPaymentMethodSpan = document.getElementById('receipt-payment-method');
+    const receiptItemsContainer = document.getElementById('receipt-items');
+    const receiptTotalSpan = document.getElementById('receipt-total');
+    const receiptCloseButton = document.getElementById('receipt-close-button');
 
-            // In-memory cart to store products
-            let cart = [];
-            let totalCartValue = 0;
-            let selectedPaymentMethod = null;
+    // Utility function to generate a simple order ID
+    const generateOrderId = () => {
+        return 'SWAG-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+    };
 
-            // Function to show the custom message box
-            window.showMessage = (message) => {
-                messageContent.textContent = message;
-                messageBox.classList.remove('hidden');
-            };
+    const updateCartCount = () => {
+        const totalItems = Object.values(cart).reduce((sum, item) => sum + item.quantity, 0);
+        cartCountSpan.textContent = totalItems;
+        if (totalItems > 0) {
+            cartCountSpan.classList.remove('opacity-0');
+        } else {
+            cartCountSpan.classList.add('opacity-0');
+        }
+    };
 
-            // Function to display the payment receipt
-            window.showReceipt = (paymentMethod, total) => {
-                const transactionId = Math.random().toString(36).substring(2, 11).toUpperCase();
-                receiptContent.innerHTML = `
-                    <p class="text-sm">Transaction ID: <span class="font-bold">${transactionId}</span></p>
-                    <p class="text-sm">Payment Method: <span class="font-bold">${paymentMethod}</span></p>
-                    <p class="lg font-semibold mt-4">Total Amount: ₹${total.toLocaleString('en-IN')}</p>
-                    <p class="text-sm text-gray-500 mt-2">Thank you for your order!</p>
+    const calculateCartTotal = () => {
+        return Object.values(cart).reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    };
+
+    const renderCart = () => {
+        cartItemsContainer.innerHTML = '';
+        const totalItems = Object.values(cart).length;
+        if (totalItems === 0) {
+            cartItemsContainer.innerHTML = '<p class="text-gray-500 text-center">Your cart is empty.</p>';
+        } else {
+            Object.values(cart).forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.classList.add('flex', 'items-center', 'space-x-4', 'bg-gray-100', 'p-4', 'rounded-lg');
+                itemElement.innerHTML = `
+                    <img src="${item.image}" alt="${item.name}" class="w-16 h-16 rounded-md object-cover">
+                    <div class="flex-grow">
+                        <h4 class="font-bold text-gray-800">${item.name}</h4>
+                        <p class="text-gray-600 text-sm">₹${item.price.toLocaleString('en-IN')} x ${item.quantity}</p>
+                    </div>
+                    <button data-name="${item.name}" class="remove-from-cart text-red-500 hover:text-red-700 transition-colors">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
                 `;
-                receiptModal.classList.remove('hidden');
-                clearCart();
-            };
+                cartItemsContainer.appendChild(itemElement);
+            });
+        }
+        cartTotalSpan.textContent = calculateCartTotal().toLocaleString('en-IN');
+    };
 
-            // Function to process the payment with a delay and success/failure logic
-            window.processPayment = () => {
-                processingModal.classList.remove('hidden');
-                setTimeout(() => {
-                    processingModal.classList.add('hidden');
-                    // Simulate a 70% chance of success
-                    const isSuccess = Math.random() < 0.7;
-                    if (isSuccess) {
-                        showReceipt(selectedPaymentMethod, totalCartValue);
-                    } else {
-                        showMessage('Payment failed. Please try a different payment method or try again.');
-                    }
-                }, 2000); // 2-second delay
-            };
+    const showMessage = (text) => {
+        messageContent.textContent = text;
+        messageBox.classList.remove('hidden');
+    };
 
-            // Function to add a product to the cart
-            window.addToCart = (button) => {
-                const productCard = button.closest('.shop-item-card');
-                const productName = productCard.dataset.name;
-                const productPrice = parseInt(productCard.dataset.price);
-                const productImage = productCard.dataset.image;
+    const renderPaymentModal = () => {
+        paymentItemsContainer.innerHTML = '';
+        Object.values(cart).forEach(item => {
+            const itemElement = document.createElement('div');
+            itemElement.classList.add('flex', 'justify-between', 'items-center', 'text-sm');
+            itemElement.innerHTML = `
+                <p class="text-gray-700">${item.name} (x${item.quantity})</p>
+                <p class="font-semibold">₹${(item.price * item.quantity).toLocaleString('en-IN')}</p>
+            `;
+            paymentItemsContainer.appendChild(itemElement);
+        });
+        const total = calculateCartTotal();
+        paymentTotalSpan.textContent = total.toLocaleString('en-IN');
+        upiAmountSpan.textContent = total.toLocaleString('en-IN');
+        cartOverlay.classList.add('translate-x-full');
+        paymentModal.classList.remove('hidden');
+    };
 
-                const existingItem = cart.find(item => item.name === productName);
-                if (existingItem) {
-                    existingItem.quantity += 1;
-                } else {
-                    cart.push({ name: productName, price: productPrice, image: productImage, quantity: 1 });
-                }
+    const renderReceiptModal = (orderId, paymentMethod) => {
+        receiptOrderIdSpan.textContent = orderId;
+        receiptPaymentMethodSpan.textContent = paymentMethod;
+        receiptItemsContainer.innerHTML = '';
+        Object.values(cart).forEach(item => {
+            const itemElement = document.createElement('div');
+            itemElement.classList.add('flex', 'justify-between', 'items-center', 'text-sm');
+            itemElement.innerHTML = `
+                <p class="text-gray-700">${item.name} (x${item.quantity})</p>
+                <p class="font-semibold">₹${(item.price * item.quantity).toLocaleString('en-IN')}</p>
+            `;
+            receiptItemsContainer.appendChild(itemElement);
+        });
+        receiptTotalSpan.textContent = calculateCartTotal().toLocaleString('en-IN');
+        paymentModal.classList.add('hidden');
+        receiptModal.classList.remove('hidden');
+    };
+    
+    // Function to handle payment form submission
+    const handlePayment = (e) => {
+        e.preventDefault();
+        const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
+        const paymentText = paymentMethod === 'cod' ? 'Cash on Delivery' : 'UPI Payment';
 
-                showMessage(`${productName} added to your cart!`);
-            };
+        payNowButton.disabled = true;
+        payNowButton.innerHTML = `<i class="fas fa-spinner animate-spin mr-2"></i> Processing...`;
 
-            // Function to clear the cart
-            window.clearCart = () => {
-                cart = [];
-            };
+        setTimeout(() => {
+            payNowButton.disabled = false;
+            payNowButton.innerHTML = `Pay Now`;
+            const orderId = generateOrderId();
+            renderReceiptModal(orderId, paymentText);
+            // Clear the cart after a successful order
+            cart = {};
+            updateCartCount();
+        }, 2000);
+    };
 
-            // Function to filter products based on category
-            window.filterProducts = (category) => {
-                const products = document.querySelectorAll('.shop-item-card');
-                let foundCategory = false;
-                products.forEach(product => {
-                    const productCategory = product.dataset.category;
-                    if (category === 'all' || productCategory.includes(category)) {
-                        product.style.display = 'block';
-                        foundCategory = true;
-                    } else {
-                        product.style.display = 'none';
-                    }
-                });
+    window.loadContent = (page) => {
+        const mainContentArea = document.getElementById('main-content-area');
+        const adSection = document.getElementById('ad-slider-section');
+        const shopSection = document.getElementById('shop-section');
+        const productGrid = document.getElementById('product-grid');
+        
+        if (adSection) adSection.classList.add('hidden');
+        if (shopSection) shopSection.classList.add('hidden');
+        if (productGrid) productGrid.classList.add('hidden');
 
-                if (!foundCategory && category !== 'all') {
-                    showMessage(`No products found in the '${category}' category.`);
-                } else if (category === 'all') {
-                    showMessage('Showing all products.');
-                } else {
-                    showMessage(`Filtered by ${category}.`);
-                }
-                mainMenuOverlay.classList.add('scale-0', 'opacity-0');
-            };
+        let content = '';
 
-            // Function to dynamically load content into the main area
-            window.loadContent = (page) => {
-                let content = '';
-                const adSection = document.getElementById('ad-slider-section');
-                const shopSection = document.getElementById('shop-section');
-                
-                if (adSection) adSection.classList.add('hidden');
-                if (shopSection) shopSection.classList.add('hidden');
-
-                switch (page) {
-                    case 'home':
-                        if (adSection) adSection.classList.remove('hidden');
-                        if (shopSection) shopSection.classList.remove('hidden');
-                        break;
-                    case 'sells':
-                        content = `<div class="text-center p-8 bg-white rounded-xl shadow-lg"><h2 class="text-4xl font-bold text-gray-800 mb-4">Sells</h2><p class="text-lg text-gray-600">This page will showcase our current sales and top-selling items.</p><p class="text-sm mt-4 text-gray-400">Content for this section is not yet implemented.</p></div>`;
-                        break;
-                    case 'contact':
-                        content = `<div class="text-center p-8 bg-white rounded-xl shadow-lg"><h2 class="text-4xl font-bold text-gray-800 mb-4">Contact Us</h2><p class="text-lg text-gray-600">Reach out to us for any questions or support.</p><p class="text-sm mt-4 text-gray-400">Contact information and form coming soon.</p></div>`;
-                        break;
-                    case 'service':
-                        content = `<div class="text-center p-8 bg-white rounded-xl shadow-lg"><h2 class="text-4xl font-bold text-gray-800 mb-4">Our Services</h2><p class="text-lg text-gray-600">Learn more about our services, including returns and customer care.</p><p class="text-sm mt-4 text-gray-400">Details about our services are not yet available.</p></div>`;
-                        break;
-                    case 'cart':
-                        let cartItemsHtml = '';
-                        let cartTotal = 0;
-                        if (cart.length > 0) {
-                            cart.forEach(item => {
-                                cartTotal += item.price * item.quantity;
-                                cartItemsHtml += `
-                                    <div class="flex items-center justify-between border-b pb-4">
-                                        <div class="flex items-center space-x-4">
-                                            <img src="${item.image}" alt="${item.name}" class="rounded-lg shadow w-20 h-20 object-cover" />
-                                            <div>
-                                                <h4 class="font-semibold text-gray-800">${item.name}</h4>
-                                                <p class="text-sm text-gray-500">Qty: ${item.quantity}</p>
-                                            </div>
-                                        </div>
-                                        <span class="font-bold text-gray-900">₹${(item.price * item.quantity).toLocaleString('en-IN')}</span>
-                                    </div>
-                                `;
-                            });
-                        } else {
-                            cartItemsHtml = `<div class="text-center p-4 text-gray-500">Your cart is empty.</div>`;
-                        }
-                        totalCartValue = cartTotal;
-
-                        content = `
-                            <div class="bg-white rounded-xl shadow-xl p-8 max-w-2xl mx-auto space-y-6">
-                                <h2 class="text-3xl font-bold text-gray-800 mb-4">My Cart</h2>
-                                <div id="cart-items" class="space-y-4">
-                                    ${cartItemsHtml}
-                                </div>
-                                <div class="flex justify-between font-bold text-lg border-t pt-4">
-                                    <span>Total:</span>
-                                    <span>₹${totalCartValue.toLocaleString('en-IN')}</span>
-                                </div>
-                                
-                                <div class="space-y-4 mt-6">
-                                    <h3 class="text-2xl font-bold text-gray-800">Payment Options</h3>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                        <label class="bg-gray-100 p-4 rounded-lg flex flex-col items-center justify-center space-y-2 border border-gray-200 cursor-pointer hover:bg-gray-200 transition-colors">
-                                            <input type="radio" name="payment-method" value="Card" class="hidden">
-                                            <i class="fas fa-credit-card text-2xl text-gray-700"></i>
-                                            <span class="font-medium text-gray-700">Card</span>
-                                        </label>
-                                        <label class="bg-gray-100 p-4 rounded-lg flex flex-col items-center justify-center space-y-2 border border-gray-200 cursor-pointer hover:bg-gray-200 transition-colors">
-                                            <input type="radio" name="payment-method" value="UPI" class="hidden">
-                                            <i class="fas fa-qrcode text-2xl text-gray-700"></i>
-                                            <span class="font-medium text-gray-700">UPI</span>
-                                        </label>
-                                        <label class="bg-gray-100 p-4 rounded-lg flex flex-col items-center justify-center space-y-2 border border-gray-200 cursor-pointer hover:bg-gray-200 transition-colors">
-                                            <input type="radio" name="payment-method" value="Net Banking" class="hidden">
-                                            <i class="fas fa-university text-2xl text-gray-700"></i>
-                                            <span class="font-medium text-gray-700">Net Banking</span>
-                                        </label>
-                                        <label class="bg-gray-100 p-4 rounded-lg flex flex-col items-center justify-center space-y-2 border border-gray-200 cursor-pointer hover:bg-gray-200 transition-colors">
-                                            <input type="radio" name="payment-method" value="Cash on Delivery" class="hidden">
-                                            <i class="fas fa-handshake text-2xl text-gray-700"></i>
-                                            <span class="font-medium text-gray-700">COD</span>
-                                        </label>
-                                    </div>
-                                </div>
-                                <button id="proceed-to-payment" class="w-full bg-gray-800 text-white font-bold py-4 rounded-full shadow-lg hover:bg-gray-700 transition-colors duration-300 mt-4">
-                                    Proceed to Payment
-                                </button>
-                                <button onclick="clearCartAndReload()" class="w-full bg-gray-500 text-white font-bold py-2 rounded-full shadow-lg hover:bg-gray-400 transition-colors duration-300 mt-4">
-                                    Clear Cart
-                                </button>
-                            </div>
-                        `;
-                        break;
-                }
+        switch (page) {
+            case 'home':
+                if (adSection) adSection.classList.remove('hidden');
+                if (shopSection) shopSection.classList.remove('hidden');
+                break;
+            case 'sales':
+                if (adSection) adSection.classList.remove('hidden');
+                if (shopSection) shopSection.classList.remove('hidden');
+                if (productGrid) productGrid.classList.remove('hidden');
+                filterProducts('sales');
+                break;
+            case 'contact':
+                content = `<div class="text-center p-8 bg-white rounded-xl shadow-lg"><h2 class="text-4xl font-bold text-gray-800 mb-4">Contact Us</h2><p class="text-lg text-gray-600">Reach out to us for any questions or support.</p><p class="text-sm mt-4 text-gray-400">Contact information and form coming soon.</p></div>`;
                 mainContentArea.innerHTML = content;
-                mainMenuOverlay.classList.add('scale-0', 'opacity-0');
+                break;
+            case 'service':
+                content = `<div class="text-center p-8 bg-white rounded-xl shadow-lg"><h2 class="text-4xl font-bold text-gray-800 mb-4">Our Services</h2><p class="text-lg text-gray-600">Learn more about our services, including returns and customer care.</p><p class="text-sm mt-4 text-gray-400">Details about our services are not yet available.</p></div>`;
+                mainContentArea.innerHTML = content;
+                break;
+        }
+        document.getElementById('main-menu-overlay').classList.add('scale-0', 'opacity-0');
+        cartOverlay.classList.add('translate-x-full');
+        paymentModal.classList.add('hidden');
+        receiptModal.classList.add('hidden');
+    };
 
-                if (page === 'cart') {
-                    // Add event listener for the new payment button after content is loaded
-                    document.getElementById('proceed-to-payment').addEventListener('click', () => {
-                        const selectedRadio = document.querySelector('input[name="payment-method"]:checked');
-                        if (selectedRadio) {
-                            selectedPaymentMethod = selectedRadio.value;
-                            processPayment();
-                        } else {
-                            showMessage('Please select a payment method.');
-                        }
-                    });
+    window.filterProducts = (category) => {
+        const products = document.querySelectorAll('.shop-item-card');
+        products.forEach(product => {
+            const productCategory = product.dataset.category;
+            const onSale = product.dataset.onsale === 'true';
 
-                    // Add visual feedback to radio buttons
-                    const labels = document.querySelectorAll('label');
-                    labels.forEach(label => {
-                        label.addEventListener('click', () => {
-                            labels.forEach(l => l.classList.remove('border-black', 'bg-gray-200'));
-                            label.classList.add('border-black', 'bg-gray-200');
-                        });
-                    });
-                }
-            };
-            
-            window.clearCartAndReload = () => {
-                clearCart();
-                loadContent('cart'); // Reload the cart view
-                showMessage('Your cart has been cleared.');
-            };
-
-            shopButton.addEventListener('click', () => {
-                if (productGrid) {
-                    productGrid.classList.toggle('hidden');
-                }
-            });
-
-            menuButton.addEventListener('click', () => {
-                if (mainMenuOverlay) {
-                    mainMenuOverlay.classList.remove('scale-0', 'opacity-0');
-                }
-            });
-
-            menuCloseButton.addEventListener('click', () => {
-                if (mainMenuOverlay) {
-                    mainMenuOverlay.classList.add('scale-0', 'opacity-0');
-                }
-            });
-
-            cartButton.addEventListener('click', () => {
-                loadContent('cart');
-            });
-
-            messageCloseButton.addEventListener('click', () => {
-                if (messageBox) {
-                    messageBox.classList.add('hidden');
-                }
-            });
-
-            receiptCloseButton.addEventListener('click', () => {
-                if (receiptModal) {
-                    receiptModal.classList.add('hidden');
-                }
-                loadContent('home');
-            });
-
-            searchInput.addEventListener('input', (e) => {
-                const query = e.target.value.toLowerCase();
-                const products = document.querySelectorAll('.shop-item-card');
-                let found = false;
-                products.forEach(product => {
-                    const productName = product.dataset.name.toLowerCase();
-                    if (productName.includes(query)) {
-                        product.style.display = 'block';
-                        found = true;
-                    } else {
-                        product.style.display = 'none';
-                    }
-                });
-                if (productGrid) {
-                     productGrid.classList.remove('hidden');
-                }
-            });
-
-            const adSlider = document.getElementById('ad-slider');
-            if (adSlider) {
-                let scrollAmount = 0;
-                const scrollInterval = setInterval(() => {
-                    const slideWidth = adSlider.offsetWidth;
-                    scrollAmount += slideWidth;
-                    if (scrollAmount >= adSlider.scrollWidth) {
-                        scrollAmount = 0;
-                    }
-                    adSlider.scrollLeft = scrollAmount;
-                }, 3000);
+            if (category === 'all') {
+                product.style.display = 'block';
+            } else if (category === 'sales') {
+                product.style.display = onSale ? 'block' : 'none';
+            } else if (productCategory.includes(category)) {
+                product.style.display = 'block';
+            } else {
+                product.style.display = 'none';
             }
         });
-    </script>
+        document.getElementById('main-menu-overlay').classList.add('scale-0', 'opacity-0');
+    };
+
+    // 3D View Initialization
+    let activeRenderer = null;
+    let activeCamera = null;
+    let activeControls = null;
+    let activeScene = null;
+    let activeMesh = null;
+
+    const show3DView = (productCard) => {
+        const container = productCard.querySelector('.product-visual-container');
+        const modelType = productCard.dataset.model;
+
+        // Clean up previous scene if it exists
+        if (activeRenderer) {
+            activeRenderer.dispose();
+            activeControls.dispose();
+        }
+
+        // Hide the 2D image
+        productCard.querySelector('.product-image').style.display = 'none';
+
+        // Check for existing canvas and remove it
+        const oldCanvas = container.querySelector('canvas');
+        if (oldCanvas) {
+            container.removeChild(oldCanvas);
+        }
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+        const pointLight = new THREE.PointLight(0xffffff, 1);
+        pointLight.position.set(5, 5, 5);
+        scene.add(pointLight);
+
+        let geometry, material;
+        switch (modelType) {
+            case 'tshirt':
+            case 'shirt':
+            case 'blouse':
+                geometry = new THREE.BoxGeometry(2, 2.5, 0.5);
+                material = new THREE.MeshLambertMaterial({ color: 0x4B5563 });
+                break;
+            case 'jeans':
+            case 'pants':
+                geometry = new THREE.BoxGeometry(1.5, 3, 1);
+                material = new THREE.MeshLambertMaterial({ color: 0x1F2937 });
+                break;
+            case 'jacket':
+                geometry = new THREE.BoxGeometry(2.2, 2.6, 0.8);
+                material = new THREE.MeshLambertMaterial({ color: 0x374151 });
+                break;
+            case 'dress':
+                geometry = new THREE.CylinderGeometry(1, 1.5, 3, 32);
+                material = new THREE.MeshLambertMaterial({ color: 0xEC4899 });
+                break;
+            case 'skirt':
+                geometry = new THREE.CylinderGeometry(0.5, 1.5, 1.5, 32);
+                material = new THREE.MeshLambertMaterial({ color: 0x1F2937 });
+                break;
+            case 'jumpsuit':
+                geometry = new THREE.BoxGeometry(1.8, 3, 0.8);
+                material = new THREE.MeshLambertMaterial({ color: 0x4B5563 });
+                break;
+            case 'watch':
+                geometry = new THREE.TorusGeometry(1, 0.2, 16, 100);
+                material = new THREE.MeshLambertMaterial({ color: 0xC0C0C0 });
+                break;
+            case 'wallet':
+                geometry = new THREE.BoxGeometry(1.5, 0.8, 0.2);
+                material = new THREE.MeshLambertMaterial({ color: 0x3B0764 });
+                break;
+            case 'sunglasses':
+                const shape = new THREE.Shape();
+                shape.moveTo(0, 0);
+                shape.lineTo(2, 0);
+                shape.lineTo(2, 0.5);
+                shape.lineTo(0.5, 0.5);
+                shape.lineTo(0.5, 1);
+                shape.lineTo(0, 1);
+                shape.lineTo(0, 0);
+                const extrudeSettings = {
+                    steps: 2,
+                    depth: 0.2,
+                    bevelEnabled: true,
+                    bevelThickness: 0.1,
+                    bevelSize: 0.1,
+                    bevelOffset: 0,
+                    bevelSegments: 1
+                };
+                geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+                material = new THREE.MeshLambertMaterial({ color: 0x000000 });
+                break;
+            case 'backpack':
+                geometry = new THREE.BoxGeometry(2, 3, 1);
+                material = new THREE.MeshLambertMaterial({ color: 0x888888 });
+                break;
+            case 'belt':
+                geometry = new THREE.CylinderGeometry(1.5, 1.5, 0.1, 32);
+                material = new THREE.MeshLambertMaterial({ color: 0x4B5563 });
+                break;
+            case 'scarf':
+                geometry = new THREE.TubeGeometry(new THREE.SplineCurve([
+                    new THREE.Vector3(0, 0, 0),
+                    new THREE.Vector3(1, 1, 1),
+                    new THREE.Vector3(2, 0, 2),
+                    new THREE.Vector3(3, 1, 3)
+                ]), 20, 0.2, 8, false);
+                material = new THREE.MeshLambertMaterial({ color: 0xDAA520 });
+                break;
+            case 'necklace':
+                geometry = new THREE.TorusKnotGeometry(1, 0.1, 100, 16);
+                material = new THREE.MeshLambertMaterial({ color: 0xD4AF37 });
+                break;
+            case 'handbag':
+                geometry = new THREE.DodecahedronGeometry(1.5);
+                material = new THREE.MeshLambertMaterial({ color: 0xA0522D });
+                break;
+            case 'earrings':
+                geometry = new THREE.RingGeometry(0.5, 0.7, 32);
+                material = new THREE.MeshLambertMaterial({ color: 0xC0C0C0 });
+                break;
+            case 'hat':
+                geometry = new THREE.ConeGeometry(1.5, 1, 32);
+                material = new THREE.MeshLambertMaterial({ color: 0x808080 });
+                break;
+            default:
+                geometry = new THREE.BoxGeometry(2, 2, 2);
+                material = new THREE.MeshLambertMaterial({ color: 0x6B7280 });
+        }
+        
+        const mesh = new THREE.Mesh(geometry, material);
+        scene.add(mesh);
+        camera.position.z = 5;
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.screenSpacePanning = false;
+
+        activeRenderer = renderer;
+        activeCamera = camera;
+        activeControls = controls;
+        activeScene = scene;
+        activeMesh = mesh;
+
+        // Handle canvas resize
+        const resizeObserver = new ResizeObserver(entries => {
+            for (let entry of entries) {
+                const { width, height } = entry.contentRect;
+                if (activeRenderer) {
+                    activeCamera.aspect = width / height;
+                    activeCamera.updateProjectionMatrix();
+                    activeRenderer.setSize(width, height);
+                }
+            }
+        });
+        resizeObserver.observe(container);
+
+        // Add a back button for 3D view
+        const backButton = document.createElement('button');
+        backButton.innerHTML = `<i class="fas fa-arrow-left"></i> Back to 2D`;
+        backButton.className = 'absolute top-2 left-2 bg-gray-900 bg-opacity-75 text-white text-xs px-2 py-1 rounded-full hover:bg-opacity-100 transition-colors z-20';
+        container.appendChild(backButton);
+        backButton.addEventListener('click', () => {
+            productCard.querySelector('.product-image').style.display = 'block';
+            container.removeChild(renderer.domElement);
+            container.removeChild(backButton);
+            if (activeRenderer) {
+                activeRenderer.dispose();
+                activeControls.dispose();
+                activeRenderer = null;
+                activeCamera = null;
+                activeControls = null;
+                activeScene = null;
+                activeMesh = null;
+            }
+        });
+    };
+    
+    // Animation loop for three.js
+    const animate = () => {
+        requestAnimationFrame(animate);
+        if (activeRenderer) {
+            activeControls.update();
+            activeRenderer.render(activeScene, activeCamera);
+        }
+    };
+    
+    // Call animate on window load to ensure all elements are ready
+    window.onload = animate;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const shopButton = document.getElementById('shop-button');
+        const productGrid = document.getElementById('product-grid');
+        const menuButton = document.getElementById('menu-button');
+        const mainMenuOverlay = document.getElementById('main-menu-overlay');
+        const menuCloseButton = document.getElementById('menu-close-button');
+        const searchInput = document.getElementById('search-input');
+        const cartButton = document.getElementById('cart-button');
+        const cartCloseButton = document.getElementById('cart-close-button');
+        const addToCartButtons = document.querySelectorAll('.add-to-cart');
+        const view3dButtons = document.querySelectorAll('.view-3d');
+
+        shopButton.addEventListener('click', () => {
+            if (productGrid) {
+                productGrid.classList.toggle('hidden');
+            }
+        });
+
+        menuButton.addEventListener('click', () => {
+            if (mainMenuOverlay) {
+                mainMenuOverlay.classList.remove('scale-0', 'opacity-0');
+            }
+        });
+
+        menuCloseButton.addEventListener('click', () => {
+            if (mainMenuOverlay) {
+                mainMenuOverlay.classList.add('scale-0', 'opacity-0');
+            }
+        });
+
+        messageCloseButton.addEventListener('click', () => {
+            if (messageBox) {
+                messageBox.classList.add('hidden');
+            }
+        });
+
+        cartButton.addEventListener('click', () => {
+            cartOverlay.classList.remove('translate-x-full');
+            renderCart();
+        });
+
+        cartCloseButton.addEventListener('click', () => {
+            cartOverlay.classList.add('translate-x-full');
+        });
+        
+        cartOverlay.addEventListener('click', (e) => {
+            if (e.target.id === 'cart-overlay') {
+                cartOverlay.classList.add('translate-x-full');
+            }
+        });
+
+        checkoutButton.addEventListener('click', () => {
+            if (calculateCartTotal() > 0) {
+                renderPaymentModal();
+            } else {
+                showMessage("Your cart is empty. Add some items to checkout!");
+            }
+        });
+
+        paymentCancelButton.addEventListener('click', () => {
+            paymentModal.classList.add('hidden');
+        });
+
+        receiptCloseButton.addEventListener('click', () => {
+            receiptModal.classList.add('hidden');
+        });
+        
+        document.getElementById('payment-form').addEventListener('submit', handlePayment);
+
+        document.querySelectorAll('input[name="payment-method"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if (e.target.value === 'upi') {
+                    upiDetailsDiv.classList.remove('hidden');
+                } else {
+                    upiDetailsDiv.classList.add('hidden');
+                }
+            });
+        });
+
+        copyUpiButton.addEventListener('click', () => {
+            navigator.clipboard.writeText(upiIdSpan.textContent);
+            showMessage("UPI ID copied to clipboard!");
+        });
+
+        addToCartButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const productCard = e.target.closest('.shop-item-card');
+                const name = productCard.dataset.name;
+                const price = parseInt(productCard.dataset.price);
+                const image = productCard.querySelector('img').src;
+                
+                if (cart[name]) {
+                    cart[name].quantity += 1;
+                } else {
+                    cart[name] = { name, price, image, quantity: 1 };
+                }
+                
+                updateCartCount();
+                renderCart();
+                showMessage(`${name} added to cart!`);
+            });
+        });
+
+        view3dButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const productCard = e.target.closest('.shop-item-card');
+                show3DView(productCard);
+            });
+        });
+
+        cartItemsContainer.addEventListener('click', (e) => {
+            if (e.target.closest('.remove-from-cart')) {
+                const name = e.target.closest('.remove-from-cart').dataset.name;
+                
+                if (cart[name]) {
+                    delete cart[name];
+                    updateCartCount();
+                    renderCart();
+                    showMessage(`${name} removed from cart.`);
+                }
+            }
+        });
+
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const products = document.querySelectorAll('.shop-item-card');
+            products.forEach(product => {
+                const productName = product.dataset.name.toLowerCase();
+                if (productName.includes(query)) {
+                    product.style.display = 'block';
+                } else {
+                    product.style.display = 'none';
+                }
+            });
+            if (productGrid) {
+                 productGrid.classList.remove('hidden');
+            }
+        });
+
+        const adSlider = document.getElementById('ad-slider');
+        if (adSlider) {
+            let scrollAmount = 0;
+            const scrollInterval = setInterval(() => {
+                const slideWidth = adSlider.offsetWidth;
+                scrollAmount += slideWidth;
+                if (scrollAmount >= adSlider.scrollWidth) {
+                    scrollAmount = 0;
+                }
+                adSlider.scrollLeft = scrollAmount;
+            }, 3000);
+        }
+    });
+</script>
 </body>
 </html>
