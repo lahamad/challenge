@@ -3,1110 +3,475 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SWAG - Fashion Dashboard</title>
+    <title>SWAG</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background: radial-gradient(circle at top left, #f3f4f6, #ffffff);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background-color: #ffffff;
+            color: #1a202c;
         }
-
-        .dashboard-container {
-            width: 100%;
-            max-width: 1200px;
-            padding: 2rem;
-        }
-
-        .gradient-search-bar {
-            background: linear-gradient(135deg, #e5e7eb, #d1d5db);
-        }
-
-        .shop-item-card {
-            border-radius: 12px;
-            overflow: hidden;
+        .card {
             transition: transform 0.2s, box-shadow 0.2s;
         }
-
-        .shop-item-card:hover {
+        .card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
         }
-
-        .product-image {
-            width: 100%;
-            height: 250px;
-            object-fit: cover;
+        .cart-panel {
+            transition: transform 0.3s ease-in-out;
+        }
+        .cart-panel.hidden {
+            transform: translateX(100%);
+        }
+        .modal {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
         }
 
-        .advertisement-slide {
-            flex-shrink: 0;
-            width: 100%;
-            height: 300px;
-            scroll-snap-align: start;
+        /* Advertisement animation */
+        .ad-scroll {
+            white-space: nowrap;
+            overflow: hidden;
+            box-sizing: border-box;
+            -webkit-mask-image: linear-gradient(to right, transparent, #000, #000, transparent);
+            mask-image: linear-gradient(to right, transparent, #000, #000, transparent);
         }
 
-        .advertisement-slider {
-            -webkit-overflow-scrolling: touch;
-            scroll-snap-type: x mandatory;
-            scrollbar-width: none;
+        .ad-scroll-content {
+            display: inline-block;
+            animation: scroll 20s linear infinite;
         }
 
-        .advertisement-slider::-webkit-scrollbar {
-            display: none;
+        .ad-scroll-item {
+            display: inline-block;
+            padding: 0 1.5rem;
+            font-weight: bold;
         }
 
-        /* Custom scrollbar for product grid on non-webkit browsers */
-        #product-grid {
-            scrollbar-width: thin;
-            scrollbar-color: #d1d5db #f3f4f6;
-        }
-        .canvas-container {
-            width: 100%;
-            height: 250px;
-            position: relative;
-        }
-        .canvas-container canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
+        @keyframes scroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
         }
     </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+<body class="min-h-screen flex flex-col items-center p-6">
 
-    <!-- Main Dashboard Container -->
-    <div class="dashboard-container">
-        <!-- Header Section -->
-        <header class="flex justify-between items-center mb-10">
-            <!-- Left side: Menu and SWAG title -->
-            <div class="flex items-center space-x-4">
-                <button id="menu-button" class="text-gray-800 focus:outline-none">
-                    <i class="fas fa-bars text-2xl"></i>
-                </button>
-                <h1 class="text-4xl font-bold text-gray-800">SWAG</h1>
-            </div>
-            <!-- Right side: Search, Cart and Profile buttons -->
-            <div class="flex items-center space-x-6">
-                <div class="relative">
-                    <input type="text" id="search-input" placeholder="Search products..." class="gradient-search-bar w-64 py-3 px-6 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all duration-300">
-                    <i class="fas fa-search absolute right-5 top-1/2 -translate-y-1/2 text-gray-500"></i>
-                </div>
-                <button id="cart-button" class="text-gray-800 focus:outline-none relative">
-                    <i class="fas fa-shopping-cart text-2xl"></i>
-                    <span id="cart-count" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center opacity-0 transition-opacity">0</span>
-                </button>
-                <button id="profile-button" class="text-gray-800 focus:outline-none">
-                    <i class="fas fa-user text-2xl"></i>
-                </button>
-            </div>
-        </header>
+    <main id="app-container" class="w-full max-w-6xl">
+        <!-- Content will be rendered here by JavaScript -->
+    </main>
 
-        <!-- Main Content -->
-        <main class="space-y-12">
-            <!-- Navigation Bars -->
-            <nav class="flex justify-around items-center bg-black text-white p-4 rounded-xl shadow-lg">
-                <button onclick="loadContent('home')" class="text-white font-medium py-2 px-4 rounded-full hover:bg-gray-800 transition-colors duration-300">Home</button>
-                <button onclick="loadContent('sales')" class="text-white font-medium py-2 px-4 rounded-full hover:bg-gray-800 transition-colors duration-300">Sales</button>
-                <button onclick="loadContent('contact')" class="text-white font-medium py-2 px-4 rounded-full hover:bg-gray-800 transition-colors duration-300">Contact</button>
-                <button onclick="loadContent('service')" class="text-white font-medium py-2 px-4 rounded-full hover:bg-gray-800 transition-colors duration-300">Service</button>
-            </nav>
-
-            <!-- Advertisement Slider -->
-            <section id="ad-slider-section" class="overflow-hidden rounded-xl shadow-lg">
-                <div id="ad-slider" class="advertisement-slider flex w-full h-full overflow-x-auto scroll-smooth">
-                    <!-- Slide 1 -->
-                    <div class="advertisement-slide bg-blue-400 flex items-center justify-center p-8 text-white">
-                        <div class="text-center">
-                            <h2 class="text-4xl font-bold mb-2">New Arrivals!</h2>
-                            <p class="text-lg">Shop the latest trends in men's and women's fashion.</p>
-                        </div>
-                    </div>
-                    <!-- Slide 2 -->
-                    <div class="advertisement-slide bg-pink-400 flex items-center justify-center p-8 text-white">
-                        <div class="text-center">
-                            <h2 class="text-4xl font-bold mb-2">Summer Sale</h2>
-                            <p class="text-lg">Up to 50% off on all items!</p>
-                        </div>
-                    </div>
-                    <!-- Slide 3 -->
-                    <div class="advertisement-slide bg-green-400 flex items-center justify-center p-8 text-white">
-                        <div class="text-4xl font-bold mb-2">Free Shipping!</h2>
-                            <p class="text-lg">On all orders over ₹1,500.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Main Content Area (Dynamically loaded) -->
-            <div id="main-content-area" class="space-y-8">
-                <!-- Shop Bar Section -->
-                <section id="shop-section" class="relative">
-                    <div class="bg-black text-white p-6 rounded-xl flex items-center justify-between shadow-lg">
-                        <span class="text-xl font-semibold">Shop Our Collection</span>
-                        <button id="shop-button" class="bg-gray-800 text-white py-2 px-6 rounded-full hover:bg-gray-700 transition-colors duration-300">
-                            Shop Now
-                        </button>
-                    </div>
-                    <!-- Product Grid - hidden by default -->
-                    <div id="product-grid" class="hidden absolute top-full left-0 right-0 z-10 bg-white p-6 rounded-b-xl shadow-xl mt-2 overflow-y-auto max-h-[60vh]">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Our Products</h2>
-                        <div id="product-list" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-                            <!-- Men's Section -->
-                            <div class="col-span-full">
-                                <h3 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Men's Fashion</h3>
-                            </div>
-                            <div class="shop-item-card bg-gray-50 relative" data-category="men" data-name="Classic Black Tee" data-price="799" data-original-price="999" data-image="https://images.unsplash.com/photo-1583743814966-8936f4525270?q=80&w=2940" data-onsale="true" data-model="tshirt">
-                                <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">SALE</span>
-                                <div class="product-visual-container">
-                                    <img src="https://images.unsplash.com/photo-1583743814966-8936f4525270?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Classic+Tee';" alt="Classic Black Tee" class="product-image">
-                                </div>
-                                <div class="p-4">
-                                    <h4 class="font-bold text-gray-800">Classic Black Tee</h4>
-                                    <p class="text-gray-600 text-sm"><span class="line-through text-red-500">₹999</span> <span class="text-gray-600">₹799</span></p>
-                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
-                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
-                                </div>
-                            </div>
-                            <div class="shop-item-card bg-gray-50 relative" data-category="men" data-name="Slim-Fit Jeans" data-price="2499" data-image="https://images.unsplash.com/photo-1624378439366-22a84399e578?q=80&w=2940" data-model="jeans">
-                                <div class="product-visual-container">
-                                    <img src="https://images.unsplash.com/photo-1624378439366-22a84399e578?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Slim-Fit+Jeans';" alt="Slim-Fit Denim Jeans" class="product-image">
-                                </div>
-                                <div class="p-4">
-                                    <h4 class="font-bold text-gray-800">Slim-Fit Jeans</h4>
-                                    <p class="text-gray-600 text-sm">₹2,499</p>
-                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
-                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
-                                </div>
-                            </div>
-                            <div class="shop-item-card bg-gray-50 relative" data-category="men" data-name="Stylish Leather Jacket" data-price="5999" data-image="https://images.unsplash.com/photo-1621334814930-b3b0d2b17f57?q=80&w=2940" data-model="jacket">
-                                <div class="product-visual-container">
-                                    <img src="https://images.unsplash.com/photo-1621334814930-b3b0d2b17f57?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Leather+Jacket';" alt="Stylish Leather Jacket" class="product-image">
-                                </div>
-                                <div class="p-4">
-                                    <h4 class="font-bold text-gray-800">Leather Jacket</h4>
-                                    <p class="text-gray-600 text-sm">₹5,999</p>
-                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
-                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
-                                </div>
-                            </div>
-                            <div class="shop-item-card bg-gray-50 relative" data-category="men" data-name="Casual Khaki Trousers" data-price="1799" data-image="https://images.unsplash.com/photo-1624378439366-22a84399e578?q=80&w=2940" data-model="pants">
-                                <div class="product-visual-container">
-                                    <img src="https://images.unsplash.com/photo-1624378439366-22a84399e578?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Khaki+Trousers';" alt="Casual Khaki Trousers" class="product-image">
-                                </div>
-                                <div class="p-4">
-                                    <h4 class="font-bold text-gray-800">Casual Trousers</h4>
-                                    <p class="text-gray-600 text-sm">₹1,799</p>
-                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
-                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
-                                </div>
-                            </div>
-                            <div class="shop-item-card bg-gray-50 relative" data-category="men" data-name="Grey Hooded Sweatshirt" data-price="1599" data-image="https://images.unsplash.com/photo-1620799140408-edc6d1d46b17?q=80&w=2940" data-model="tshirt">
-                                <div class="product-visual-container">
-                                    <img src="https://images.unsplash.com/photo-1620799140408-edc6d1d46b17?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Hoodie';" alt="Grey Hooded Sweatshirt" class="product-image">
-                                </div>
-                                <div class="p-4">
-                                    <h4 class="font-bold text-gray-800">Sporty Sweatshirt</h4>
-                                    <p class="text-gray-600 text-sm">₹1,599</p>
-                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
-                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
-                                </div>
-                            </div>
-                            <div class="shop-item-card bg-gray-50 relative" data-category="men" data-name="White Linen Shirt" data-price="1899" data-image="https://images.unsplash.com/photo-1620799140408-edc6d1d46b17?q=80&w=2940" data-model="tshirt">
-                                <div class="product-visual-container">
-                                    <img src="https://images.unsplash.com/photo-1620799140408-edc6d1d46b17?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Linen+Shirt';" alt="White Linen Shirt" class="product-image">
-                                </div>
-                                <div class="p-4">
-                                    <h4 class="font-bold text-gray-800">Linen Formal Shirt</h4>
-                                    <p class="text-gray-600 text-sm">₹1,899</p>
-                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
-                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
-                                </div>
-                            </div>
-                            <!-- Women's Section -->
-                            <div class="col-span-full mt-8">
-                                <h3 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Women's Fashion</h3>
-                            </div>
-                            <div class="shop-item-card bg-gray-50 relative" data-category="women" data-name="Floral Summer Dress" data-price="2999" data-original-price="3299" data-image="https://images.unsplash.com/photo-1549480103-6052026e6327?q=80&w=2940" data-onsale="true" data-model="dress">
-                                <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">SALE</span>
-                                <div class="product-visual-container">
-                                    <img src="https://images.unsplash.com/photo-1549480103-6052026e6327?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Floral+Dress';" alt="Floral Summer Dress" class="product-image">
-                                </div>
-                                <div class="p-4">
-                                    <h4 class="font-bold text-gray-800">Summer Floral Dress</h4>
-                                    <p class="text-gray-600 text-sm"><span class="line-through text-red-500">₹3,299</span> <span class="text-gray-600">₹2,999</span></p>
-                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
-                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
-                                </div>
-                            </div>
-                            <div class="shop-item-card bg-gray-50 relative" data-category="women" data-name="Elegant Silk Blouse" data-price="1499" data-image="https://images.unsplash.com/photo-1582035306898-1e0e852a3d7b?q=80&w=2940" data-model="tshirt">
-                                <div class="product-visual-container">
-                                    <img src="https://images.unsplash.com/photo-1582035306898-1e0e852a3d7b?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Silk+Blouse';" alt="Elegant Silk Blouse" class="product-image">
-                                </div>
-                                <div class="p-4">
-                                    <h4 class="font-bold text-gray-800">Elegant Silk Top</h4>
-                                    <p class="text-gray-600 text-sm">₹1,499</p>
-                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
-                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
-                                </div>
-                            </div>
-                            <div class="shop-item-card bg-gray-50 relative" data-category="women" data-name="High-Waisted Trousers" data-price="2199" data-image="https://images.unsplash.com/photo-1566150916327-b95d820577a7?q=80&w=2940" data-model="pants">
-                                <div class="product-visual-container">
-                                    <img src="https://images.unsplash.com/photo-1566150916327-b95d820577a7?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=High-Waisted+Trousers';" alt="High-Waisted Trousers" class="product-image">
-                                </div>
-                                <div class="p-4">
-                                    <h4 class="font-bold text-gray-800">High-Waisted Trousers</h4>
-                                    <p class="text-gray-600 text-sm">₹2,199</p>
-                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
-                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
-                                </div>
-                            </div>
-                            <div class="shop-item-card bg-gray-50 relative" data-category="women" data-name="Navy Pleated Midi Skirt" data-price="1899" data-image="https://images.unsplash.com/photo-1594967396000-0e9e900994f7?q=80&w=2940" data-model="skirt">
-                                <div class="product-visual-container">
-                                    <img src="https://images.unsplash.com/photo-1594967396000-0e9e900994f7?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Pleated+Skirt';" alt="Navy Pleated Midi Skirt" class="product-image">
-                                </div>
-                                <div class="p-4">
-                                    <h4 class="font-bold text-gray-800">Pleated Midi Skirt</h4>
-                                    <p class="text-gray-600 text-sm">₹1,899</p>
-                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
-                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
-                                </div>
-                            </div>
-                            <div class="shop-item-card bg-gray-50 relative" data-category="women" data-name="Bohemian Floral Blouse" data-price="1100" data-original-price="1299" data-image="https://images.unsplash.com/photo-1582035306898-1e0e852a3d7b?q=80&w=2940" data-onsale="true" data-model="tshirt">
-                                <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">SALE</span>
-                                <div class="product-visual-container">
-                                    <img src="https://images.unsplash.com/photo-1582035306898-1e0e852a3d7b?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Floral+Blouse';" alt="Bohemian Floral Blouse" class="product-image">
-                                </div>
-                                <div class="p-4">
-                                    <h4 class="font-bold text-gray-800">Boho Floral Blouse</h4>
-                                    <p class="text-gray-600 text-sm"><span class="line-through text-red-500">₹1,299</span> <span class="text-gray-600">₹1,100</span></p>
-                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
-                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
-                                </div>
-                            </div>
-                            <div class="shop-item-card bg-gray-50 relative" data-category="women" data-name="Khaki Utility Jumpsuit" data-price="2899" data-image="https://images.unsplash.com/photo-1566150916327-b95d820577a7?q=80&w=2940" data-model="jumpsuit">
-                                <div class="product-visual-container">
-                                    <img src="https://images.unsplash.com/photo-1566150916327-b95d820577a7?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Jumpsuit';" alt="Khaki Utility Jumpsuit" class="product-image">
-                                </div>
-                                <div class="p-4">
-                                    <h4 class="font-bold text-gray-800">Utility Jumpsuit</h4>
-                                    <p class="text-gray-600 text-sm">₹2,899</p>
-                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
-                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
-                                </div>
-                            </div>
-                            <!-- Men's Accessories Section -->
-                            <div class="col-span-full mt-8">
-                                <h3 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Men's Accessories</h3>
-                            </div>
-                            <div class="shop-item-card bg-gray-50 relative" data-category="men_accessories" data-name="Classic Watch" data-price="4999" data-image="https://images.unsplash.com/photo-1610438258327-f1e1f8222c83?q=80&w=2940" data-model="watch">
-                                <div class="product-visual-container">
-                                    <img src="https://images.unsplash.com/photo-1610438258327-f1e1f8222c83?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Classic+Watch';" alt="Classic Watch" class="product-image">
-                                </div>
-                                <div class="p-4">
-                                    <h4 class="font-bold text-gray-800">Classic Watch</h4>
-                                    <p class="text-gray-600 text-sm">₹4,999</p>
-                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
-                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
-                                </div>
-                            </div>
-                            <div class="shop-item-card bg-gray-50 relative" data-category="men_accessories" data-name="Leather Wallet" data-price="1299" data-image="https://images.unsplash.com/photo-1561053153-a745c1109319?q=80&w=2940" data-model="wallet">
-                                <div class="product-visual-container">
-                                    <img src="https://images.unsplash.com/photo-1561053153-a745c1109319?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Leather+Wallet';" alt="Leather Wallet" class="product-image">
-                                </div>
-                                <div class="p-4">
-                                    <h4 class="font-bold text-gray-800">Leather Wallet</h4>
-                                    <p class="text-gray-600 text-sm">₹1,299</p>
-                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
-                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
-                                </div>
-                            </div>
-                            <!-- New Men's Accessories -->
-                            <div class="shop-item-card bg-gray-50 relative" data-category="men_accessories" data-name="Stylish Sunglasses" data-price="1399" data-original-price="1599" data-image="https://images.unsplash.com/photo-1572635196237-14b3f281503f?q=80&w=2960" data-onsale="true" data-model="sunglasses">
-                                <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">SALE</span>
-                                <div class="product-visual-container">
-                                    <img src="https://images.unsplash.com/photo-1572635196237-14b3f281503f?q=80&w=2960" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Sunglasses';" alt="Stylish Sunglasses" class="product-image">
-                                </div>
-                                <div class="p-4">
-                                    <h4 class="font-bold text-gray-800">Stylish Sunglasses</h4>
-                                    <p class="text-gray-600 text-sm"><span class="line-through text-red-500">₹1,599</span> <span class="text-gray-600">₹1,399</span></p>
-                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
-                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
-                                </div>
-                            </div>
-                            <div class="shop-item-card bg-gray-50 relative" data-category="men_accessories" data-name="Travel Backpack" data-price="2999" data-image="https://images.unsplash.com/photo-1549480103-6052026e6327?q=80&w=2940" data-model="backpack">
-                                <div class="product-visual-container">
-                                    <img src="https://images.unsplash.com/photo-1549480103-6052026e6327?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Backpack';" alt="Travel Backpack" class="product-image">
-                                </div>
-                                <div class="p-4">
-                                    <h4 class="font-bold text-gray-800">Travel Backpack</h4>
-                                    <p class="text-gray-600 text-sm">₹2,999</p>
-                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
-                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
-                                </div>
-                            </div>
-                            <div class="shop-item-card bg-gray-50 relative" data-category="men_accessories" data-name="Leather Belt" data-price="899" data-image="https://images.unsplash.com/photo-1561053153-a745c1109319?q=80&w=2940" data-model="belt">
-                                <div class="product-visual-container">
-                                    <img src="https://images.unsplash.com/photo-1561053153-a745c1109319?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Leather+Belt';" alt="Leather Belt" class="product-image">
-                                </div>
-                                <div class="p-4">
-                                    <h4 class="font-bold text-gray-800">Leather Belt</h4>
-                                    <p class="text-gray-600 text-sm">₹899</p>
-                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
-                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
-                                </div>
-                            </div>
-                            <!-- Women's Accessories Section -->
-                            <div class="col-span-full mt-8">
-                                <h3 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Women's Accessories</h3>
-                            </div>
-                            <div class="shop-item-card bg-gray-50 relative" data-category="women_accessories" data-name="Silk Scarf" data-price="899" data-image="https://images.unsplash.com/photo-1610438258327-f1e1f8222c83?q=80&w=2940" data-model="scarf">
-                                <div class="product-visual-container">
-                                    <img src="https://images.unsplash.com/photo-1610438258327-f1e1f8222c83?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Silk+Scarf';" alt="Silk Scarf" class="product-image">
-                                </div>
-                                <div class="p-4">
-                                    <h4 class="font-bold text-gray-800">Silk Scarf</h4>
-                                    <p class="text-gray-600 text-sm">₹899</p>
-                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
-                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
-                                </div>
-                            </div>
-                            <div class="shop-item-card bg-gray-50 relative" data-category="women_accessories" data-name="Statement Necklace" data-price="1599" data-image="https://images.unsplash.com/photo-1594967396000-0e9e900994f7?q=80&w=2940" data-model="necklace">
-                                <div class="product-visual-container">
-                                    <img src="https://images.unsplash.com/photo-1594967396000-0e9e900994f7?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Necklace';" alt="Statement Necklace" class="product-image">
-                                </div>
-                                <div class="p-4">
-                                    <h4 class="font-bold text-gray-800">Statement Necklace</h4>
-                                    <p class="text-gray-600 text-sm">₹1,599</p>
-                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
-                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
-                                </div>
-                            </div>
-                            <!-- New Women's Accessories -->
-                            <div class="shop-item-card bg-gray-50 relative" data-category="women_accessories" data-name="Leather Handbag" data-price="2999" data-original-price="3499" data-image="https://images.unsplash.com/photo-1566150916327-b95d820577a7?q=80&w=2940" data-onsale="true" data-model="handbag">
-                                <span class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">SALE</span>
-                                <div class="product-visual-container">
-                                    <img src="https://images.unsplash.com/photo-1566150916327-b95d820577a7?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Handbag';" alt="Leather Handbag" class="product-image">
-                                </div>
-                                <div class="p-4">
-                                    <h4 class="font-bold text-gray-800">Leather Handbag</h4>
-                                    <p class="text-gray-600 text-sm"><span class="line-through text-red-500">₹3,499</span> <span class="text-gray-600">₹2,999</span></p>
-                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
-                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
-                                </div>
-                            </div>
-                            <div class="shop-item-card bg-gray-50 relative" data-category="women_accessories" data-name="Elegant Hoop Earrings" data-price="799" data-image="https://images.unsplash.com/photo-1594967396000-0e9e900994f7?q=80&w=2940" data-model="earrings">
-                                <div class="product-visual-container">
-                                    <img src="https://images.unsplash.com/photo-1594967396000-0e9e900994f7?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Earrings';" alt="Elegant Hoop Earrings" class="product-image">
-                                </div>
-                                <div class="p-4">
-                                    <h4 class="font-bold text-gray-800">Hoop Earrings</h4>
-                                    <p class="text-gray-600 text-sm">₹799</p>
-                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
-                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
-                                </div>
-                            </div>
-                            <div class="shop-item-card bg-gray-50 relative" data-category="women_accessories" data-name="Wide Brim Hat" data-price="1199" data-image="https://images.unsplash.com/photo-1582035306898-1e0e852a3d7b?q=80&w=2940" data-model="hat">
-                                <div class="product-visual-container">
-                                    <img src="https://images.unsplash.com/photo-1582035306898-1e0e852a3d7b?q=80&w=2940" onerror="this.src='https://placehold.co/400x400/E5E7EB/4B5563?text=Wide+Brim+Hat';" alt="Wide Brim Hat" class="product-image">
-                                </div>
-                                <div class="p-4">
-                                    <h4 class="font-bold text-gray-800">Wide Brim Hat</h4>
-                                    <p class="text-gray-600 text-sm">₹1,199</p>
-                                    <button class="add-to-cart mt-4 w-full bg-gray-800 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">Add to Cart</button>
-                                    <button class="view-3d mt-2 w-full bg-gray-600 text-white font-medium py-2 rounded-full shadow-lg hover:bg-gray-700 transition-colors">3D View</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-            </div>
-        </main>
-
-        <!-- Footer Section with Company Details -->
-        <footer class="mt-12 p-8 bg-black text-white rounded-xl shadow-lg text-center">
-            <h3 class="text-2xl font-bold mb-2">SWAG</h3>
-            <p class="text-sm text-gray-400">Your ultimate destination for fashion trends.</p>
-            <div class="flex justify-center space-x-6 mt-4">
-                <a href="#" class="text-white hover:text-gray-400 transition-colors"><i class="fab fa-facebook-f text-xl"></i></a>
-                <a href="#" class="text-white hover:text-gray-400 transition-colors"><i class="fab fa-twitter text-xl"></i></a>
-                <a href="#" class="text-white hover:text-gray-400 transition-colors"><i class="fab fa-instagram text-xl"></i></a>
-                <a href="#" class="text-white hover:text-gray-400 transition-colors"><i class="fab fa-linkedin-in text-xl"></i></a>
-            </div>
-            <p class="mt-6 text-xs text-gray-500">&copy; 2024 SWAG. All Rights Reserved.</p>
-        </footer>
-    </div>
-
-    <!-- Main Menu Overlay (Hidden by default) -->
-    <div id="main-menu-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-95 text-white flex flex-col items-center justify-center space-y-8 z-50 transform scale-0 opacity-0 transition-all duration-300">
-        <button id="menu-close-button" class="absolute top-8 right-8 text-white text-3xl focus:outline-none">
-            <i class="fas fa-times"></i>
-        </button>
-        <div class="flex flex-col items-center space-y-4">
-            <h2 class="text-3xl font-bold mb-4">Menu</h2>
-            <button onclick="loadContent('home')" class="text-lg font-medium hover:text-gray-400 transition-colors duration-200">Home</button>
-            <button onclick="loadContent('contact')" class="text-lg font-medium hover:text-gray-400 transition-colors duration-200">Contact</button>
-            <button onclick="loadContent('service')" class="text-lg font-medium hover:text-gray-400 transition-colors duration-200">Service</button>
+    <!-- Cart Panel -->
+    <div id="cart-panel" class="cart-panel hidden fixed top-0 right-0 w-80 h-full bg-gray-100 shadow-xl z-50 p-6 flex flex-col">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">My Cart</h2>
+            <button id="close-cart-btn" class="text-gray-600 hover:text-gray-900 transition duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
         </div>
-        <div class="flex flex-col items-center space-y-4">
-            <h2 class="text-3xl font-bold mb-4">Shop Filters</h2>
-            <button onclick="filterProducts('men')" class="text-lg font-medium hover:text-gray-400 transition-colors duration-200">Men</button>
-            <button onclick="filterProducts('women')" class="text-lg font-medium hover:text-gray-400 transition-colors duration-200">Women</button>
-            <button onclick="filterProducts('men_accessories')" class="text-lg font-medium hover:text-gray-400 transition-colors duration-200">Men's Accessories</button>
-            <button onclick="filterProducts('women_accessories')" class="text-lg font-medium hover:text-gray-400 transition-colors duration-200">Women's Accessories</button>
-            <button onclick="filterProducts('all')" class="text-lg font-medium hover:text-gray-400 transition-colors duration-200">All</button>
+        <div id="cart-items-container" class="flex-grow overflow-y-auto mb-4 space-y-4">
+            <!-- Cart items will be rendered here -->
         </div>
-    </div>
-
-    <!-- Cart Overlay (Hidden by default) -->
-    <div id="cart-overlay" class="fixed inset-0 z-50 transform translate-x-full transition-transform duration-300 bg-gray-900 bg-opacity-50">
-        <div class="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-xl flex flex-col rounded-l-xl">
-            <div class="flex justify-between items-center p-6 border-b border-gray-200">
-                <h2 class="text-2xl font-bold">My Cart</h2>
-                <button id="cart-close-button" class="text-gray-500 hover:text-gray-800 transition-colors">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
+        <div class="mt-auto pt-4 border-t border-gray-300">
+            <div class="flex justify-between items-center text-lg font-bold text-gray-900">
+                <span>Total:</span>
+                <span id="cart-total-price">₹0</span>
             </div>
-            <div id="cart-items" class="flex-grow p-6 overflow-y-auto space-y-4">
-                <p class="text-gray-500 text-center">Your cart is empty.</p>
-            </div>
-            <div class="p-6 border-t border-gray-200">
-                <div class="flex justify-between items-center text-lg font-bold">
-                    <span>Total:</span>
-                    <span>₹<span id="cart-total">0</span></span>
-                </div>
-                <button id="checkout-button" class="mt-4 w-full bg-gray-800 text-white font-bold py-3 rounded-full shadow-lg hover:bg-gray-700 transition-colors">
-                    Checkout
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Payment Modal (Hidden by default) -->
-    <div id="payment-modal" class="fixed inset-0 z-50 hidden bg-gray-900 bg-opacity-75 flex items-center justify-center">
-        <div class="bg-white p-8 rounded-xl shadow-lg max-w-lg w-full">
-            <h2 class="text-2xl font-bold mb-6 text-center">Payment Details</h2>
-            <div class="mb-4">
-                <div id="payment-items" class="bg-gray-100 p-4 rounded-lg max-h-60 overflow-y-auto mb-4"></div>
-                <div class="flex justify-between items-center text-lg font-bold">
-                    <span>Total:</span>
-                    <span>₹<span id="payment-total">0</span></span>
-                </div>
-            </div>
-            <form id="payment-form" class="space-y-4">
-                <div class="space-y-2">
-                    <label class="block text-gray-700 font-semibold">Select Payment Method</label>
-                    <div class="flex flex-col space-y-2">
-                        <label class="inline-flex items-center">
-                            <input type="radio" class="form-radio text-gray-800" name="payment-method" value="cod" checked>
-                            <span class="ml-2 text-gray-800">Cash on Delivery</span>
-                        </label>
-                        <label class="inline-flex items-center">
-                            <input type="radio" class="form-radio text-gray-800" name="payment-method" value="upi">
-                            <span class="ml-2 text-gray-800">UPI Payment</span>
-                        </label>
-                    </div>
-                </div>
-                <div id="upi-details" class="bg-gray-100 p-4 rounded-lg hidden">
-                    <p class="text-sm text-gray-600 mb-2">Please transfer ₹<span id="upi-amount">0</span> to the following UPI ID:</p>
-                    <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-300">
-                        <span id="upi-id" class="font-mono text-gray-800">swag-fashion@upi</span>
-                        <button type="button" id="copy-upi" class="text-gray-500 hover:text-gray-800 ml-4 transition-colors">
-                            <i class="fas fa-copy"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="flex justify-between space-x-4 mt-6">
-                    <button type="button" id="payment-cancel" class="flex-1 py-3 px-6 text-center bg-gray-200 text-gray-800 rounded-full hover:bg-gray-300 transition-colors">
-                        Cancel
-                    </button>
-                    <button type="submit" id="pay-now-button" class="flex-1 py-3 px-6 text-center bg-gray-800 text-white font-bold rounded-full shadow-lg hover:bg-gray-700 transition-colors">
-                        Pay Now
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Receipt Modal (Hidden by default) -->
-    <div id="receipt-modal" class="fixed inset-0 z-50 hidden bg-gray-900 bg-opacity-75 flex items-center justify-center">
-        <div class="bg-white p-8 rounded-xl shadow-lg max-w-lg w-full text-center">
-            <div class="flex flex-col items-center mb-6">
-                <div class="bg-green-500 rounded-full h-16 w-16 flex items-center justify-center text-white text-3xl mb-4">
-                    <i class="fas fa-check"></i>
-                </div>
-                <h2 class="text-3xl font-bold text-gray-800 mb-2">Order Placed!</h2>
-                <p class="text-gray-600">Your order has been successfully placed and will be delivered soon.</p>
-            </div>
-            <div class="border-t border-b border-gray-200 py-6 mb-6 text-left">
-                <p class="text-gray-500">Order ID: <span id="receipt-order-id" class="font-bold text-gray-800"></span></p>
-                <p class="text-gray-500">Payment Method: <span id="receipt-payment-method" class="font-bold text-gray-800"></span></p>
-                <div id="receipt-items" class="mt-4 space-y-2"></div>
-                <div class="flex justify-between items-center mt-4 pt-2 border-t border-gray-200">
-                    <span class="font-bold text-lg">Total:</span>
-                    <span class="font-bold text-lg">₹<span id="receipt-total">0</span></span>
-                </div>
-            </div>
-            <button id="receipt-close-button" class="w-full bg-gray-800 text-white font-bold py-3 rounded-full shadow-lg hover:bg-gray-700 transition-colors">
-                Continue Shopping
+            <button id="checkout-btn" class="w-full mt-4 bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition duration-300">
+                Checkout
             </button>
         </div>
     </div>
 
-    <!-- Simple Message Box -->
-    <div id="message-box" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-[100]">
-        <div class="bg-white p-8 rounded-lg shadow-lg max-w-sm w-full text-center">
-            <h3 class="text-xl font-bold mb-4">Message</h3>
-            <p id="message-content" class="text-gray-700 mb-6"></p>
-            <button id="message-close" class="bg-gray-800 text-white py-2 px-6 rounded-full hover:bg-gray-700">Close</button>
+    <!-- Payment Modal -->
+    <div id="payment-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden opacity-0">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md transform scale-95">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4 text-center">Payment Method</h3>
+            <p class="text-gray-600 text-center mb-6">Your total is <span id="payment-total-amount" class="font-bold">₹0</span>. Please select a payment option below.</p>
+            
+            <div class="space-y-4">
+                <div class="flex items-center space-x-2">
+                    <input type="radio" id="upi-radio" name="payment-method" value="upi" class="form-radio text-indigo-600">
+                    <label for="upi-radio" class="text-gray-900">UPI</label>
+                </div>
+                <div id="upi-details" class="hidden pl-6 mt-2">
+                    <input type="text" id="upi-id-input" placeholder="Enter UPI ID (e.g., example@upi)" class="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-900 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-indigo-600">
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <input type="radio" id="card-radio" name="payment-method" value="card" class="form-radio text-indigo-600">
+                    <label for="card-radio" class="text-gray-900">Credit / Debit Card</label>
+                </div>
+                <div id="card-details" class="hidden pl-6 mt-2 space-y-3">
+                    <input type="text" id="card-number-input" placeholder="Card Number" class="w-full px-4 py-2 rounded-lg bg-gray-100 text-gray-900 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-indigo-600">
+                    <div class="flex gap-3">
+                        <input type="text" id="expiry-input" placeholder="MM/YY" class="w-1/2 px-4 py-2 rounded-lg bg-gray-100 text-gray-900 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-indigo-600">
+                        <input type="text" id="cvv-input" placeholder="CVV" class="w-1/2 px-4 py-2 rounded-lg bg-gray-100 text-gray-900 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-indigo-600">
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <input type="radio" id="cod-radio" name="payment-method" value="cod" class="form-radio text-indigo-600" checked>
+                    <label for="cod-radio" class="text-gray-900">Cash on Delivery</label>
+                </div>
+            </div>
+
+            <div class="flex justify-center gap-4 mt-6">
+                <button id="pay-now-btn" class="bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700 transition duration-300">
+                    Pay Now
+                </button>
+                <button id="cancel-payment-btn" class="bg-red-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-red-700 transition duration-300">
+                    Cancel
+                </button>
+            </div>
         </div>
     </div>
 
-<script>
-    let cart = {}; // Use an object to store product quantities
-    const cartCountSpan = document.getElementById('cart-count');
-    const cartItemsContainer = document.getElementById('cart-items');
-    const cartTotalSpan = document.getElementById('cart-total');
-    const cartOverlay = document.getElementById('cart-overlay');
-    const messageBox = document.getElementById('message-box');
-    const messageContent = document.getElementById('message-content');
-    const messageCloseButton = document.getElementById('message-close');
-    const checkoutButton = document.getElementById('checkout-button');
+    <!-- Footer Section -->
+    <footer class="bg-gray-900 text-white py-12 mt-12 rounded-t-xl shadow-inner">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <h2 class="text-4xl font-bold text-indigo-400 mb-4">SWAG</h2>
+            <p class="text-gray-300 max-w-2xl mx-auto mb-6">
+                SWAG is your premier online destination for cutting-edge fashion. We curate a collection of timeless style and modern trends to help you express your unique personality. Our mission is to provide high-quality apparel and a seamless shopping experience.
+            </p>
+            <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-gray-400">
+                <p>Email: contact@swag.com</p>
+                <p>Phone: +91 98765 43210</p>
+            </div>
+            <p class="mt-8 text-sm text-gray-500">© 2025 SWAG. All rights reserved.</p>
+        </div>
+    </footer>
 
-    const paymentModal = document.getElementById('payment-modal');
-    const paymentItemsContainer = document.getElementById('payment-items');
-    const paymentTotalSpan = document.getElementById('payment-total');
-    const paymentCancelButton = document.getElementById('payment-cancel');
-    const payNowButton = document.getElementById('pay-now-button');
-    const upiDetailsDiv = document.getElementById('upi-details');
-    const upiAmountSpan = document.getElementById('upi-amount');
-    const upiIdSpan = document.getElementById('upi-id');
-    const copyUpiButton = document.getElementById('copy-upi');
+    <script>
+        // Use a UUID for a unique identifier
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-    const receiptModal = document.getElementById('receipt-modal');
-    const receiptOrderIdSpan = document.getElementById('receipt-order-id');
-    const receiptPaymentMethodSpan = document.getElementById('receipt-payment-method');
-    const receiptItemsContainer = document.getElementById('receipt-items');
-    const receiptTotalSpan = document.getElementById('receipt-total');
-    const receiptCloseButton = document.getElementById('receipt-close-button');
+        const appContainer = document.getElementById('app-container');
+        const cartPanel = document.getElementById('cart-panel');
+        const cartItemsContainer = document.getElementById('cart-items-container');
+        const cartTotalPriceElement = document.getElementById('cart-total-price');
+        const checkoutBtn = document.getElementById('checkout-btn');
+        const paymentModal = document.getElementById('payment-modal');
+        const paymentTotalAmount = document.getElementById('payment-total-amount');
 
-    // Utility function to generate a simple order ID
-    const generateOrderId = () => {
-        return 'SWAG-' + Math.random().toString(36).substr(2, 9).toUpperCase();
-    };
+        let cartItems = [];
 
-    const updateCartCount = () => {
-        const totalItems = Object.values(cart).reduce((sum, item) => sum + item.quantity, 0);
-        cartCountSpan.textContent = totalItems;
-        if (totalItems > 0) {
-            cartCountSpan.classList.remove('opacity-0');
-        } else {
-            cartCountSpan.classList.add('opacity-0');
+        const offers = [
+            "🔥 Get 20% off on your first order!",
+            "👕 Buy 2 T-shirts, get 1 FREE!",
+            "🚚 Free shipping on all orders over ₹1000!",
+            "🌟 Limited time offer: 50% off on selected items!",
+            "✨ New arrivals are here. Shop the latest trends!"
+        ];
+
+        const products = [
+            { id: 1, name: "Casual T-Shirt", category: "Men", price: 400, imageUrl: "https://placehold.co/400x400/f0f0f0/333333?text=Men's+T-Shirt" },
+            { id: 2, name: "Summer Dress", category: "Women", price: 750, imageUrl: "https://placehold.co/400x400/f0f0f0/333333?text=Women's+Dress" },
+            { id: 3, name: "Denim Jacket", category: "Men", price: 1200, imageUrl: "https://placehold.co/400x400/f0f0f0/333333?text=Men's+Jacket" },
+            { id: 4, name: "Floral Skirt", category: "Women", price: 600, imageUrl: "https://placehold.co/400x400/f0f0f0/333333?text=Women's+Skirt" },
+            { id: 5, name: "Hoodie", category: "Men", price: 950, imageUrl: "https://placehold.co/400x400/f0f0f0/333333?text=Men's+Hoodie" },
+            { id: 6, name: "Blouse", category: "Women", price: 700, imageUrl: "https://placehold.co/400x400/f0f0f0/333333?text=Women's+Blouse" },
+            { id: 7, name: "Polo Shirt", category: "Men", price: 500, imageUrl: "https://placehold.co/400x400/f0f0f0/333333?text=Men's+Polo" },
+            { id: 8, name: "Jeans", category: "Women", price: 850, imageUrl: "https://placehold.co/400x400/f0f0f0/333333?text=Women's+Jeans" },
+            { id: 9, name: "Aviator Sunglasses", category: "Men", price: 1500, imageUrl: "https://placehold.co/400x400/f0f0f0/333333?text=Men's+Sunglasses" },
+            { id: 10, name: "Leather Belt", category: "Men", price: 800, imageUrl: "https://placehold.co/400x400/f0f0f0/333333?text=Men's+Belt" },
+            { id: 11, name: "Sport Watch", category: "Men", price: 2500, imageUrl: "https://placehold.co/400x400/f0f0f0/333333?text=Men's+Watch" },
+            { id: 12, name: "Classic Tote Bag", category: "Women", price: 1800, imageUrl: "https://placehold.co/400x400/f0f0f0/333333?text=Women's+Tote+Bag" },
+            { id: 13, name: "Sterling Silver Earrings", category: "Women", price: 900, imageUrl: "https://placehold.co/400x400/f0f0f0/333333?text=Women's+Earrings" },
+            { id: 14, name: "Silk Scarf", category: "Women", price: 550, imageUrl: "https://placehold.co/400x400/f0f0f0/333333?text=Women's+Scarf" },
+            // Additional products
+            { id: 15, name: "Printed Casual Shirt", category: "Men", price: 600, imageUrl: "https://placehold.co/400x400/f0f0f0/333333?text=Men's+Shirt" },
+            { id: 16, name: "Ankle Boots", category: "Women", price: 3200, imageUrl: "https://placehold.co/400x400/f0f0f0/333333?text=Women's+Boots" },
+            { id: 17, name: "Leather Wallet", category: "Men", price: 1100, imageUrl: "https://placehold.co/400x400/f0f0f0/333333?text=Men's+Wallet" },
+            { id: 18, name: "Summer Hat", category: "Women", price: 450, imageUrl: "https://placehold.co/400x400/f0f0f0/333333?text=Women's+Hat" },
+            { id: 19, name: "Slim Fit Trousers", category: "Men", price: 1400, imageUrl: "https://placehold.co/400x400/f0f0f0/333333?text=Men's+Trousers" },
+            { id: 20, name: "Party Dress", category: "Women", price: 2800, imageUrl: "https://placehold.co/400x400/f0f0f0/333333?text=Women's+Party+Dress" }
+        ];
+        
+        function showMessage(message) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50';
+            modal.innerHTML = `<div class="bg-gray-800 text-white p-6 rounded-lg shadow-lg">
+                                 <p>${message}</p>
+                               </div>`;
+            document.body.appendChild(modal);
+            setTimeout(() => modal.remove(), 2000);
         }
-    };
 
-    const calculateCartTotal = () => {
-        return Object.values(cart).reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    };
+        function renderCartItems() {
+            cartItemsContainer.innerHTML = '';
+            if (cartItems.length === 0) {
+                cartItemsContainer.innerHTML = '<p class="text-gray-500 text-center">Your cart is empty.</p>';
+                checkoutBtn.disabled = true;
+                checkoutBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                checkoutBtn.disabled = false;
+                checkoutBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                let total = 0;
+                cartItems.forEach(item => {
+                    total += item.price;
+                    const itemElement = document.createElement('div');
+                    itemElement.className = 'flex items-center space-x-4 bg-gray-200 p-4 rounded-lg';
+                    itemElement.innerHTML = `
+                        <img src="${item.imageUrl}" alt="${item.name}" class="h-16 w-16 object-cover rounded">
+                        <div class="flex-grow">
+                            <h4 class="text-gray-900 font-semibold">${item.name}</h4>
+                            <p class="text-gray-600">₹${item.price}</p>
+                        </div>
+                    `;
+                    cartItemsContainer.appendChild(itemElement);
+                });
+                cartTotalPriceElement.textContent = `₹${total}`;
+            }
+        }
 
-    const renderCart = () => {
-        cartItemsContainer.innerHTML = '';
-        const totalItems = Object.values(cart).length;
-        if (totalItems === 0) {
-            cartItemsContainer.innerHTML = '<p class="text-gray-500 text-center">Your cart is empty.</p>';
-        } else {
-            Object.values(cart).forEach(item => {
-                const itemElement = document.createElement('div');
-                itemElement.classList.add('flex', 'items-center', 'space-x-4', 'bg-gray-100', 'p-4', 'rounded-lg');
-                itemElement.innerHTML = `
-                    <img src="${item.image}" alt="${item.name}" class="w-16 h-16 rounded-md object-cover">
-                    <div class="flex-grow">
-                        <h4 class="font-bold text-gray-800">${item.name}</h4>
-                        <p class="text-gray-600 text-sm">₹${item.price.toLocaleString('en-IN')} x ${item.quantity}</p>
+        function toggleCartPanel(show) {
+            if (show) {
+                renderCartItems();
+                cartPanel.classList.remove('hidden');
+            } else {
+                cartPanel.classList.add('hidden');
+            }
+        }
+
+        function renderHomePage() {
+            const offersHtml = offers.map(offer => `<span class="ad-scroll-item text-white">${offer}</span>`).join('');
+            appContainer.innerHTML = `
+                <div class="text-center py-20 px-4 md:px-8">
+                    <div class="flex items-center justify-center mb-6">
+                        <h1 class="text-5xl md:text-7xl font-bold tracking-tight text-gray-800 animate-pulse">
+                            SWAG
+                        </h1>
                     </div>
-                    <button data-name="${item.name}" class="remove-from-cart text-red-500 hover:text-red-700 transition-colors">
-                        <i class="fas fa-trash-alt"></i>
+                    <p class="text-lg md:text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+                        Your destination for timeless style and modern fashion. Explore our exclusive collections for men and women.
+                    </p>
+                    
+                    <!-- Advertisement Slide -->
+                    <div class="ad-scroll bg-indigo-600 py-3 rounded-lg mb-8 shadow-lg">
+                        <div class="ad-scroll-content">
+                            ${offersHtml}${offersHtml} <!-- Duplicate content for seamless scrolling -->
+                        </div>
+                    </div>
+                    
+                    <button id="shop-now-btn" class="bg-indigo-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-indigo-700 transition duration-300 transform hover:scale-105">
+                        Shop Now
                     </button>
-                `;
-                cartItemsContainer.appendChild(itemElement);
-            });
-        }
-        cartTotalSpan.textContent = calculateCartTotal().toLocaleString('en-IN');
-    };
-
-    const showMessage = (text) => {
-        messageContent.textContent = text;
-        messageBox.classList.remove('hidden');
-    };
-
-    const renderPaymentModal = () => {
-        paymentItemsContainer.innerHTML = '';
-        Object.values(cart).forEach(item => {
-            const itemElement = document.createElement('div');
-            itemElement.classList.add('flex', 'justify-between', 'items-center', 'text-sm');
-            itemElement.innerHTML = `
-                <p class="text-gray-700">${item.name} (x${item.quantity})</p>
-                <p class="font-semibold">₹${(item.price * item.quantity).toLocaleString('en-IN')}</p>
+                </div>
             `;
-            paymentItemsContainer.appendChild(itemElement);
-        });
-        const total = calculateCartTotal();
-        paymentTotalSpan.textContent = total.toLocaleString('en-IN');
-        upiAmountSpan.textContent = total.toLocaleString('en-IN');
-        cartOverlay.classList.add('translate-x-full');
-        paymentModal.classList.remove('hidden');
-    };
 
-    const renderReceiptModal = (orderId, paymentMethod) => {
-        receiptOrderIdSpan.textContent = orderId;
-        receiptPaymentMethodSpan.textContent = paymentMethod;
-        receiptItemsContainer.innerHTML = '';
-        Object.values(cart).forEach(item => {
-            const itemElement = document.createElement('div');
-            itemElement.classList.add('flex', 'justify-between', 'items-center', 'text-sm');
-            itemElement.innerHTML = `
-                <p class="text-gray-700">${item.name} (x${item.quantity})</p>
-                <p class="font-semibold">₹${(item.price * item.quantity).toLocaleString('en-IN')}</p>
+            document.getElementById('shop-now-btn').addEventListener('click', () => renderProductsPage(products));
+            toggleCartPanel(false);
+        }
+
+        function renderProductsPage(productsToDisplay) {
+            const productHtml = productsToDisplay.map(product => `
+                <div class="card bg-gray-100 rounded-xl overflow-hidden shadow-lg border border-gray-300">
+                    <img src="${product.imageUrl}" alt="${product.name}" class="w-full h-auto object-cover">
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-900">${product.name}</h3>
+                        <p class="text-gray-600 text-sm mt-1">${product.category}'s Collection</p>
+                        <p class="text-gray-900 text-2xl font-bold mt-2">₹${product.price}</p>
+                        <button class="w-full mt-4 bg-indigo-600 text-white font-bold py-2 rounded-lg hover:bg-indigo-700 transition duration-300 add-to-cart-btn" data-product-id="${product.id}">
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            appContainer.innerHTML = `
+                <div class="w-full">
+                    <div class="flex items-center justify-between mb-8">
+                        <button id="go-back-btn" class="text-gray-600 hover:text-gray-900 transition duration-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            Go Back
+                        </button>
+                        <h2 class="text-3xl md:text-4xl font-bold text-gray-900">All Products</h2>
+                        <button id="my-cart-btn" class="text-gray-600 hover:text-gray-900 transition duration-200">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5.4M7 13l-2.293 2.293c-.63.63-.191 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                             </svg>
+                        </button>
+                    </div>
+                    <div class="mb-8">
+                        <input type="text" id="search-input" placeholder="Search for products..." class="w-full px-4 py-3 rounded-lg bg-gray-100 text-gray-900 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition duration-300">
+                    </div>
+
+                    <!-- Filter and Navigation Bar -->
+                    <div class="bg-gray-100 rounded-lg shadow-lg p-4 mb-8 mx-auto max-w-4xl">
+                        <div class="flex flex-wrap justify-center gap-8 mb-4">
+                            <!-- Menu and Navigation Bars -->
+                            <button id="home-btn-products" class="text-gray-600 hover:text-gray-900 transition duration-200">Home</button>
+                            <button id="sales-btn-products" class="text-gray-600 hover:text-gray-900 transition duration-200">Sales</button>
+                            <button id="contact-btn-products" class="text-gray-600 hover:text-gray-900 transition duration-200">Contact</button>
+                            <button id="service-btn-products" class="text-gray-600 hover:text-gray-900 transition duration-200">Service</button>
+                        </div>
+                        <div class="flex flex-wrap justify-center items-center gap-4">
+                            <!-- Category Filter Bar -->
+                            <span class="font-semibold text-gray-900">Filter:</span>
+                            <button class="filter-btn text-gray-600 hover:text-white hover:bg-indigo-600 transition duration-200 rounded-lg px-3 py-1 border border-gray-300" data-category="All">All</button>
+                            <button class="filter-btn text-gray-600 hover:text-white hover:bg-indigo-600 transition duration-200 rounded-lg px-3 py-1 border border-gray-300" data-category="Men">Men's</button>
+                            <button class="filter-btn text-gray-600 hover:text-white hover:bg-indigo-600 transition duration-200 rounded-lg px-3 py-1 border border-gray-300" data-category="Women">Women's</button>
+                            <button class="filter-btn text-gray-600 hover:text-white hover:bg-indigo-600 transition duration-200 rounded-lg px-3 py-1 border border-gray-300" data-category="Accessories">Accessories</button>
+
+                            <!-- Price Filter Bar -->
+                            <div class="flex items-center gap-2 mt-2 md:mt-0">
+                                <span class="font-semibold text-gray-900">Price (₹):</span>
+                                <input type="number" id="min-price" placeholder="Min" class="w-20 px-2 py-1 rounded-lg bg-gray-100 text-gray-900 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-indigo-600">
+                                <span class="text-gray-600">-</span>
+                                <input type="number" id="max-price" placeholder="Max" class="w-20 px-2 py-1 rounded-lg bg-gray-100 text-gray-900 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-indigo-600">
+                                <button id="apply-price-btn" class="bg-indigo-600 text-white px-4 py-1 rounded-lg hover:bg-indigo-700 transition duration-300">Apply</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8" id="product-grid">
+                        ${productHtml}
+                    </div>
+                </div>
             `;
-            receiptItemsContainer.appendChild(itemElement);
-        });
-        receiptTotalSpan.textContent = calculateCartTotal().toLocaleString('en-IN');
-        paymentModal.classList.add('hidden');
-        receiptModal.classList.remove('hidden');
-    };
-    
-    // Function to handle payment form submission
-    const handlePayment = (e) => {
-        e.preventDefault();
-        const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
-        const paymentText = paymentMethod === 'cod' ? 'Cash on Delivery' : 'UPI Payment';
+            document.getElementById('go-back-btn').addEventListener('click', renderHomePage);
+            document.getElementById('my-cart-btn').addEventListener('click', () => toggleCartPanel(true));
+            document.getElementById('close-cart-btn').addEventListener('click', () => toggleCartPanel(false));
+            
+            // New navigation buttons on products page
+            document.getElementById('home-btn-products').addEventListener('click', () => showMessage('Home section is now active!'));
+            document.getElementById('sales-btn-products').addEventListener('click', () => showMessage('Sales section is now active!'));
+            document.getElementById('contact-btn-products').addEventListener('click', () => showMessage('Contact section is now active!'));
+            document.getElementById('service-btn-products').addEventListener('click', () => showMessage('Service section is now active!'));
 
-        payNowButton.disabled = true;
-        payNowButton.innerHTML = `<i class="fas fa-spinner animate-spin mr-2"></i> Processing...`;
+            const searchInput = document.getElementById('search-input');
+            const minPriceInput = document.getElementById('min-price');
+            const maxPriceInput = document.getElementById('max-price');
+            const applyPriceBtn = document.getElementById('apply-price-btn');
 
-        setTimeout(() => {
-            payNowButton.disabled = false;
-            payNowButton.innerHTML = `Pay Now`;
-            const orderId = generateOrderId();
-            renderReceiptModal(orderId, paymentText);
-            // Clear the cart after a successful order
-            cart = {};
-            updateCartCount();
-        }, 2000);
-    };
+            let currentCategory = 'All';
 
-    window.loadContent = (page) => {
-        const mainContentArea = document.getElementById('main-content-area');
-        const adSection = document.getElementById('ad-slider-section');
-        const shopSection = document.getElementById('shop-section');
-        const productGrid = document.getElementById('product-grid');
-        
-        if (adSection) adSection.classList.add('hidden');
-        if (shopSection) shopSection.classList.add('hidden');
-        if (productGrid) productGrid.classList.add('hidden');
+            function filterAndRenderProducts() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const minPrice = parseFloat(minPriceInput.value) || 0;
+                const maxPrice = parseFloat(maxPriceInput.value) || Infinity;
 
-        let content = '';
-
-        switch (page) {
-            case 'home':
-                if (adSection) adSection.classList.remove('hidden');
-                if (shopSection) shopSection.classList.remove('hidden');
-                break;
-            case 'sales':
-                if (adSection) adSection.classList.remove('hidden');
-                if (shopSection) shopSection.classList.remove('hidden');
-                if (productGrid) productGrid.classList.remove('hidden');
-                filterProducts('sales');
-                break;
-            case 'contact':
-                content = `<div class="text-center p-8 bg-white rounded-xl shadow-lg"><h2 class="text-4xl font-bold text-gray-800 mb-4">Contact Us</h2><p class="text-lg text-gray-600">Reach out to us for any questions or support.</p><p class="text-sm mt-4 text-gray-400">Contact information and form coming soon.</p></div>`;
-                mainContentArea.innerHTML = content;
-                break;
-            case 'service':
-                content = `<div class="text-center p-8 bg-white rounded-xl shadow-lg"><h2 class="text-4xl font-bold text-gray-800 mb-4">Our Services</h2><p class="text-lg text-gray-600">Learn more about our services, including returns and customer care.</p><p class="text-sm mt-4 text-gray-400">Details about our services are not yet available.</p></div>`;
-                mainContentArea.innerHTML = content;
-                break;
-        }
-        document.getElementById('main-menu-overlay').classList.add('scale-0', 'opacity-0');
-        cartOverlay.classList.add('translate-x-full');
-        paymentModal.classList.add('hidden');
-        receiptModal.classList.add('hidden');
-    };
-
-    window.filterProducts = (category) => {
-        const products = document.querySelectorAll('.shop-item-card');
-        products.forEach(product => {
-            const productCategory = product.dataset.category;
-            const onSale = product.dataset.onsale === 'true';
-
-            if (category === 'all') {
-                product.style.display = 'block';
-            } else if (category === 'sales') {
-                product.style.display = onSale ? 'block' : 'none';
-            } else if (productCategory.includes(category)) {
-                product.style.display = 'block';
-            } else {
-                product.style.display = 'none';
+                const filteredProducts = products.filter(product => {
+                    const matchesSearch = product.name.toLowerCase().includes(searchTerm) || product.category.toLowerCase().includes(searchTerm);
+                    const matchesCategory = currentCategory === 'All' || product.category === currentCategory;
+                    const matchesPrice = product.price >= minPrice && product.price <= maxPrice;
+                    return matchesSearch && matchesCategory && matchesPrice;
+                });
+                renderProductsPage(filteredProducts);
             }
-        });
-        document.getElementById('main-menu-overlay').classList.add('scale-0', 'opacity-0');
-    };
 
-    // 3D View Initialization
-    let activeRenderer = null;
-    let activeCamera = null;
-    let activeControls = null;
-    let activeScene = null;
-    let activeMesh = null;
+            searchInput.addEventListener('input', filterAndRenderProducts);
+            applyPriceBtn.addEventListener('click', filterAndRenderProducts);
 
-    const show3DView = (productCard) => {
-        const container = productCard.querySelector('.product-visual-container');
-        const modelType = productCard.dataset.model;
+            document.querySelectorAll('.filter-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    currentCategory = e.target.dataset.category === 'All' ? 'All' : e.target.dataset.category;
+                    filterAndRenderProducts();
+                });
+            });
 
-        // Clean up previous scene if it exists
-        if (activeRenderer) {
-            activeRenderer.dispose();
-            activeControls.dispose();
-        }
-
-        // Hide the 2D image
-        productCard.querySelector('.product-image').style.display = 'none';
-
-        // Check for existing canvas and remove it
-        const oldCanvas = container.querySelector('canvas');
-        if (oldCanvas) {
-            container.removeChild(oldCanvas);
-        }
-
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ alpha: true });
-        renderer.setSize(container.clientWidth, container.clientHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        container.appendChild(renderer.domElement);
-
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-        scene.add(ambientLight);
-        const pointLight = new THREE.PointLight(0xffffff, 1);
-        pointLight.position.set(5, 5, 5);
-        scene.add(pointLight);
-
-        let geometry, material;
-        switch (modelType) {
-            case 'tshirt':
-            case 'shirt':
-            case 'blouse':
-                geometry = new THREE.BoxGeometry(2, 2.5, 0.5);
-                material = new THREE.MeshLambertMaterial({ color: 0x4B5563 });
-                break;
-            case 'jeans':
-            case 'pants':
-                geometry = new THREE.BoxGeometry(1.5, 3, 1);
-                material = new THREE.MeshLambertMaterial({ color: 0x1F2937 });
-                break;
-            case 'jacket':
-                geometry = new THREE.BoxGeometry(2.2, 2.6, 0.8);
-                material = new THREE.MeshLambertMaterial({ color: 0x374151 });
-                break;
-            case 'dress':
-                geometry = new THREE.CylinderGeometry(1, 1.5, 3, 32);
-                material = new THREE.MeshLambertMaterial({ color: 0xEC4899 });
-                break;
-            case 'skirt':
-                geometry = new THREE.CylinderGeometry(0.5, 1.5, 1.5, 32);
-                material = new THREE.MeshLambertMaterial({ color: 0x1F2937 });
-                break;
-            case 'jumpsuit':
-                geometry = new THREE.BoxGeometry(1.8, 3, 0.8);
-                material = new THREE.MeshLambertMaterial({ color: 0x4B5563 });
-                break;
-            case 'watch':
-                geometry = new THREE.TorusGeometry(1, 0.2, 16, 100);
-                material = new THREE.MeshLambertMaterial({ color: 0xC0C0C0 });
-                break;
-            case 'wallet':
-                geometry = new THREE.BoxGeometry(1.5, 0.8, 0.2);
-                material = new THREE.MeshLambertMaterial({ color: 0x3B0764 });
-                break;
-            case 'sunglasses':
-                const shape = new THREE.Shape();
-                shape.moveTo(0, 0);
-                shape.lineTo(2, 0);
-                shape.lineTo(2, 0.5);
-                shape.lineTo(0.5, 0.5);
-                shape.lineTo(0.5, 1);
-                shape.lineTo(0, 1);
-                shape.lineTo(0, 0);
-                const extrudeSettings = {
-                    steps: 2,
-                    depth: 0.2,
-                    bevelEnabled: true,
-                    bevelThickness: 0.1,
-                    bevelSize: 0.1,
-                    bevelOffset: 0,
-                    bevelSegments: 1
-                };
-                geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-                material = new THREE.MeshLambertMaterial({ color: 0x000000 });
-                break;
-            case 'backpack':
-                geometry = new THREE.BoxGeometry(2, 3, 1);
-                material = new THREE.MeshLambertMaterial({ color: 0x888888 });
-                break;
-            case 'belt':
-                geometry = new THREE.CylinderGeometry(1.5, 1.5, 0.1, 32);
-                material = new THREE.MeshLambertMaterial({ color: 0x4B5563 });
-                break;
-            case 'scarf':
-                geometry = new THREE.TubeGeometry(new THREE.SplineCurve([
-                    new THREE.Vector3(0, 0, 0),
-                    new THREE.Vector3(1, 1, 1),
-                    new THREE.Vector3(2, 0, 2),
-                    new THREE.Vector3(3, 1, 3)
-                ]), 20, 0.2, 8, false);
-                material = new THREE.MeshLambertMaterial({ color: 0xDAA520 });
-                break;
-            case 'necklace':
-                geometry = new THREE.TorusKnotGeometry(1, 0.1, 100, 16);
-                material = new THREE.MeshLambertMaterial({ color: 0xD4AF37 });
-                break;
-            case 'handbag':
-                geometry = new THREE.DodecahedronGeometry(1.5);
-                material = new THREE.MeshLambertMaterial({ color: 0xA0522D });
-                break;
-            case 'earrings':
-                geometry = new THREE.RingGeometry(0.5, 0.7, 32);
-                material = new THREE.MeshLambertMaterial({ color: 0xC0C0C0 });
-                break;
-            case 'hat':
-                geometry = new THREE.ConeGeometry(1.5, 1, 32);
-                material = new THREE.MeshLambertMaterial({ color: 0x808080 });
-                break;
-            default:
-                geometry = new THREE.BoxGeometry(2, 2, 2);
-                material = new THREE.MeshLambertMaterial({ color: 0x6B7280 });
-        }
-        
-        const mesh = new THREE.Mesh(geometry, material);
-        scene.add(mesh);
-        camera.position.z = 5;
-
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-        controls.screenSpacePanning = false;
-
-        activeRenderer = renderer;
-        activeCamera = camera;
-        activeControls = controls;
-        activeScene = scene;
-        activeMesh = mesh;
-
-        // Handle canvas resize
-        const resizeObserver = new ResizeObserver(entries => {
-            for (let entry of entries) {
-                const { width, height } = entry.contentRect;
-                if (activeRenderer) {
-                    activeCamera.aspect = width / height;
-                    activeCamera.updateProjectionMatrix();
-                    activeRenderer.setSize(width, height);
-                }
-            }
-        });
-        resizeObserver.observe(container);
-
-        // Add a back button for 3D view
-        const backButton = document.createElement('button');
-        backButton.innerHTML = `<i class="fas fa-arrow-left"></i> Back to 2D`;
-        backButton.className = 'absolute top-2 left-2 bg-gray-900 bg-opacity-75 text-white text-xs px-2 py-1 rounded-full hover:bg-opacity-100 transition-colors z-20';
-        container.appendChild(backButton);
-        backButton.addEventListener('click', () => {
-            productCard.querySelector('.product-image').style.display = 'block';
-            container.removeChild(renderer.domElement);
-            container.removeChild(backButton);
-            if (activeRenderer) {
-                activeRenderer.dispose();
-                activeControls.dispose();
-                activeRenderer = null;
-                activeCamera = null;
-                activeControls = null;
-                activeScene = null;
-                activeMesh = null;
-            }
-        });
-    };
-    
-    // Animation loop for three.js
-    const animate = () => {
-        requestAnimationFrame(animate);
-        if (activeRenderer) {
-            activeControls.update();
-            activeRenderer.render(activeScene, activeCamera);
-        }
-    };
-    
-    // Call animate on window load to ensure all elements are ready
-    window.onload = animate;
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const shopButton = document.getElementById('shop-button');
-        const productGrid = document.getElementById('product-grid');
-        const menuButton = document.getElementById('menu-button');
-        const mainMenuOverlay = document.getElementById('main-menu-overlay');
-        const menuCloseButton = document.getElementById('menu-close-button');
-        const searchInput = document.getElementById('search-input');
-        const cartButton = document.getElementById('cart-button');
-        const cartCloseButton = document.getElementById('cart-close-button');
-        const addToCartButtons = document.querySelectorAll('.add-to-cart');
-        const view3dButtons = document.querySelectorAll('.view-3d');
-
-        shopButton.addEventListener('click', () => {
-            if (productGrid) {
-                productGrid.classList.toggle('hidden');
-            }
-        });
-
-        menuButton.addEventListener('click', () => {
-            if (mainMenuOverlay) {
-                mainMenuOverlay.classList.remove('scale-0', 'opacity-0');
-            }
-        });
-
-        menuCloseButton.addEventListener('click', () => {
-            if (mainMenuOverlay) {
-                mainMenuOverlay.classList.add('scale-0', 'opacity-0');
-            }
-        });
-
-        messageCloseButton.addEventListener('click', () => {
-            if (messageBox) {
-                messageBox.classList.add('hidden');
-            }
-        });
-
-        cartButton.addEventListener('click', () => {
-            cartOverlay.classList.remove('translate-x-full');
-            renderCart();
-        });
-
-        cartCloseButton.addEventListener('click', () => {
-            cartOverlay.classList.add('translate-x-full');
-        });
-        
-        cartOverlay.addEventListener('click', (e) => {
-            if (e.target.id === 'cart-overlay') {
-                cartOverlay.classList.add('translate-x-full');
-            }
-        });
-
-        checkoutButton.addEventListener('click', () => {
-            if (calculateCartTotal() > 0) {
-                renderPaymentModal();
-            } else {
-                showMessage("Your cart is empty. Add some items to checkout!");
-            }
-        });
-
-        paymentCancelButton.addEventListener('click', () => {
-            paymentModal.classList.add('hidden');
-        });
-
-        receiptCloseButton.addEventListener('click', () => {
-            receiptModal.classList.add('hidden');
-        });
-        
-        document.getElementById('payment-form').addEventListener('submit', handlePayment);
-
-        document.querySelectorAll('input[name="payment-method"]').forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                if (e.target.value === 'upi') {
-                    upiDetailsDiv.classList.remove('hidden');
-                } else {
-                    upiDetailsDiv.classList.add('hidden');
+            // Event delegation for Add to Cart buttons
+            document.getElementById('product-grid').addEventListener('click', (event) => {
+                const targetButton = event.target.closest('.add-to-cart-btn');
+                if (targetButton) {
+                    const productId = parseInt(targetButton.dataset.productId);
+                    const productToAdd = products.find(p => p.id === productId);
+                    if (productToAdd) {
+                        cartItems.push(productToAdd);
+                        showMessage(`${productToAdd.name} added to cart!`);
+                        renderCartItems(); // Update cart panel
+                    }
                 }
             });
-        });
-
-        copyUpiButton.addEventListener('click', () => {
-            navigator.clipboard.writeText(upiIdSpan.textContent);
-            showMessage("UPI ID copied to clipboard!");
-        });
-
-        addToCartButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                const productCard = e.target.closest('.shop-item-card');
-                const name = productCard.dataset.name;
-                const price = parseInt(productCard.dataset.price);
-                const image = productCard.querySelector('img').src;
-                
-                if (cart[name]) {
-                    cart[name].quantity += 1;
-                } else {
-                    cart[name] = { name, price, image, quantity: 1 };
-                }
-                
-                updateCartCount();
-                renderCart();
-                showMessage(`${name} added to cart!`);
-            });
-        });
-
-        view3dButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                const productCard = e.target.closest('.shop-item-card');
-                show3DView(productCard);
-            });
-        });
-
-        cartItemsContainer.addEventListener('click', (e) => {
-            if (e.target.closest('.remove-from-cart')) {
-                const name = e.target.closest('.remove-from-cart').dataset.name;
-                
-                if (cart[name]) {
-                    delete cart[name];
-                    updateCartCount();
-                    renderCart();
-                    showMessage(`${name} removed from cart.`);
-                }
-            }
-        });
-
-        searchInput.addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase();
-            const products = document.querySelectorAll('.shop-item-card');
-            products.forEach(product => {
-                const productName = product.dataset.name.toLowerCase();
-                if (productName.includes(query)) {
-                    product.style.display = 'block';
-                } else {
-                    product.style.display = 'none';
-                }
-            });
-            if (productGrid) {
-                 productGrid.classList.remove('hidden');
-            }
-        });
-
-        const adSlider = document.getElementById('ad-slider');
-        if (adSlider) {
-            let scrollAmount = 0;
-            const scrollInterval = setInterval(() => {
-                const slideWidth = adSlider.offsetWidth;
-                scrollAmount += slideWidth;
-                if (scrollAmount >= adSlider.scrollWidth) {
-                    scrollAmount = 0;
-                }
-                adSlider.scrollLeft = scrollAmount;
-            }, 3000);
         }
-    });
-</script>
+
+        // --- Payment Logic ---
+        function showPaymentModal() {
+            if (cartItems.length === 0) {
+                showMessage("Your cart is empty. Please add items before checking out.");
+                return;
+            }
+            const total = cartItems.reduce((sum, item) => sum + item.price, 0);
+            paymentTotalAmount.textContent = `₹${total}`;
+            paymentModal.classList.remove('hidden', 'opacity-0');
+            paymentModal.classList.add('flex', 'opacity-100');
+            document.getElementById('pay-now-btn').textContent = "Place Order";
+        }
+
+        function hidePaymentModal() {
+            paymentModal.classList.remove('flex', 'opacity-100');
+            paymentModal.classList.add('hidden', 'opacity-0');
+        }
+
+        function simulatePayment() {
+            const selectedMethod = document.querySelector('input[name="payment-method"]:checked').value;
+            let message = '';
+            
+            if (selectedMethod === 'upi') {
+                const upiId = document.getElementById('upi-id-input').value;
+                if (!upiId) {
+                    showMessage("Please enter your UPI ID.");
+                    return;
+                }
+                message = "Payment successful via UPI! Your order will be processed shortly.";
+            } else if (selectedMethod === 'card') {
+                const cardNumber = document.getElementById('card-number-input').value;
+                const expiry = document.getElementById('expiry-input').value;
+                const cvv = document.getElementById('cvv-input').value;
+                if (!cardNumber || !expiry || !cvv) {
+                    showMessage("Please fill out all credit card details.");
+                    return;
+                }
+                message = "Payment successful via Credit Card! Your order is confirmed.";
+            } else if (selectedMethod === 'cod') {
+                message = "Order placed! We will contact you for Cash on Delivery confirmation.";
+            }
+
+            hidePaymentModal();
+            cartItems = []; // Clear the cart
+            renderCartItems();
+            showMessage(message);
+            toggleCartPanel(false);
+        }
+
+        // Event Listeners for payment modal
+        checkoutBtn.addEventListener('click', showPaymentModal);
+        document.getElementById('pay-now-btn').addEventListener('click', simulatePayment);
+        document.getElementById('cancel-payment-btn').addEventListener('click', hidePaymentModal);
+        
+        // Event listeners for payment method radio buttons
+        const upiRadio = document.getElementById('upi-radio');
+        const cardRadio = document.getElementById('card-radio');
+        const codRadio = document.getElementById('cod-radio');
+        const upiDetails = document.getElementById('upi-details');
+        const cardDetails = document.getElementById('card-details');
+        const payNowBtn = document.getElementById('pay-now-btn');
+
+        upiRadio.addEventListener('change', () => {
+            upiDetails.classList.remove('hidden');
+            cardDetails.classList.add('hidden');
+            payNowBtn.textContent = "Pay Now";
+        });
+        cardRadio.addEventListener('change', () => {
+            cardDetails.classList.remove('hidden');
+            upiDetails.classList.add('hidden');
+            payNowBtn.textContent = "Pay Now";
+        });
+        codRadio.addEventListener('change', () => {
+            upiDetails.classList.add('hidden');
+            cardDetails.classList.add('hidden');
+            payNowBtn.textContent = "Place Order";
+        });
+
+        document.addEventListener('DOMContentLoaded', renderHomePage);
+    </script>
+
 </body>
 </html>
